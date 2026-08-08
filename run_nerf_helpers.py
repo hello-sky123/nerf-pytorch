@@ -7,7 +7,10 @@ import numpy as np
 
 # Misc
 img2mse = lambda x, y : torch.mean((x - y) ** 2)
-mse2psnr = lambda x : -10. * torch.log(x) / torch.log(torch.Tensor([10.]))
+# NOTE: the log(10) constant is built on x's own device/dtype. The legacy
+# torch.Tensor([10.]) constructor ignores torch.set_default_device(), so it would
+# land on the CPU and raise a cross-device error against a CUDA x.
+mse2psnr = lambda x : -10. * torch.log(x) / torch.log(torch.tensor([10.], dtype=x.dtype, device=x.device))
 to8b = lambda x : (255*np.clip(x,0,1)).astype(np.uint8)
 
 
@@ -151,7 +154,7 @@ class NeRF(nn.Module):
 
 # Ray helpers
 def get_rays(H, W, K, c2w):
-    i, j = torch.meshgrid(torch.linspace(0, W-1, W), torch.linspace(0, H-1, H))  # pytorch's meshgrid has indexing='ij'
+    i, j = torch.meshgrid(torch.linspace(0, W-1, W), torch.linspace(0, H-1, H), indexing='ij')  # pytorch's meshgrid has indexing='ij'
     i = i.t()
     j = j.t()
     dirs = torch.stack([(i-K[0][2])/K[0][0], -(j-K[1][2])/K[1][1], -torch.ones_like(i)], -1)
@@ -221,7 +224,9 @@ def sample_pdf(bins, weights, N_samples, det=False, pytest=False):
             u = np.broadcast_to(u, new_shape)
         else:
             u = np.random.rand(*new_shape)
-        u = torch.Tensor(u)
+        # match cdf's device/dtype: the det branch above yields a read-only
+        # broadcast view, and torch.Tensor() would ignore set_default_device().
+        u = torch.tensor(u, dtype=cdf.dtype, device=cdf.device)
 
     # Invert CDF
     u = u.contiguous()
