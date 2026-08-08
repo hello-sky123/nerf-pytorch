@@ -106,10 +106,11 @@ def _load_data(basedir, factor=None, width=None, height=None, load_imgs=True):
         return poses, bds
     
     def imread(f):
-        if f.endswith('png'):
-            return imageio.imread(f, ignoregamma=True)
-        else:
-            return imageio.imread(f)
+        # NOTE: the legacy `ignoregamma=True` kwarg belonged to imageio's old
+        # FreeImage PNG plugin. Modern imageio routes PNGs to Pillow, which
+        # rejects it (TypeError). Pillow does not apply gamma correction here,
+        # so plain imread already matches the intended behaviour.
+        return imageio.imread(f)
         
     imgs = imgs = [imread(f)[...,:3]/255. for f in imgfiles]
     imgs = np.stack(imgs, -1)  
@@ -294,7 +295,7 @@ def load_llff_data(basedir, factor=8, recenter=True, bd_factor=.75, spherify=Fal
             c2w_path[:3,3] = c2w_path[:3,3] + zloc * c2w_path[:3,2]
             rads[2] = 0.
             N_rots = 1
-            N_views/=2
+            N_views//=2  # keep this an int: np.linspace() rejects a float count
 
         # Generate poses for spiral path
         render_poses = render_path_spiral(c2w_path, up, rads, focal, zdelta, zrate=.5, rots=N_rots, N=N_views)
