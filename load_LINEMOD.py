@@ -1,10 +1,10 @@
-import os
-import torch
-import numpy as np
-import imageio.v2 as imageio
 import json
-import torch.nn.functional as F
+import os
+
 import cv2
+import imageio.v2 as imageio
+import numpy as np
+import torch
 
 
 trans_t = lambda t: torch.Tensor([

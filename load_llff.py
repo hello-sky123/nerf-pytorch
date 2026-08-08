@@ -19,7 +19,7 @@ def _minify(basedir, factors=[], resolutions=[]):
     if not needtoload:
         return
 
-    from shutil import copy, which
+    from shutil import which
     from subprocess import check_output
 
     # mogrify is ImageMagick, an external non-Python dependency that is often
