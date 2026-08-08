@@ -1,5 +1,6 @@
 import numpy as np
-import os, imageio
+import os
+import imageio.v2 as imageio
 
 
 ########## Slightly modified version of LLFF data loading code 
@@ -18,9 +19,19 @@ def _minify(basedir, factors=[], resolutions=[]):
     if not needtoload:
         return
     
-    from shutil import copy
+    from shutil import copy, which
     from subprocess import check_output
-    
+
+    # mogrify is ImageMagick, an external non-Python dependency that is often
+    # absent. Check up front and say so, rather than dying further down with a
+    # bare CalledProcessError exit status 127.
+    if which('mogrify') is None:
+        raise RuntimeError(
+            'ImageMagick (mogrify) is required to resize the LLFF images in {!r} '
+            'but was not found. Either install it (e.g. `sudo apt install '
+            'imagemagick`) or pre-create the resized image directory '
+            'yourself.'.format(basedir))
+
     imgdir = os.path.join(basedir, 'images')
     imgs = [os.path.join(imgdir, f) for f in sorted(os.listdir(imgdir))]
     imgs = [f for f in imgs if any([f.endswith(ex) for ex in ['JPG', 'jpg', 'png', 'jpeg', 'PNG']])]

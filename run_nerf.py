@@ -1,6 +1,6 @@
 import os, sys
 import numpy as np
-import imageio
+import imageio.v2 as imageio
 import json
 import random
 import time
