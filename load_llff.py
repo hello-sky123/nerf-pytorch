@@ -212,7 +212,10 @@ def spherify_poses(poses, bds):
     
     sc = 1./rad
     poses_reset[:,:3,3] *= sc
-    bds *= sc
+    # bds is float32 while sc is float64. numpy 2.0 would evaluate this in double
+    # and round; numpy < 2.0 narrowed the scalar first, so narrow it explicitly.
+    # (poses_reset and rad are float64, so they need no such cast.)
+    bds *= np.float32(sc)
     rad *= sc
     
     centroid = np.mean(poses_reset[:,:3,3], 0)
@@ -255,7 +258,11 @@ def load_llff_data(basedir, factor=8, recenter=True, bd_factor=.75, spherify=Fal
     bds = np.moveaxis(bds, -1, 0).astype(np.float32)
     
     # Rescale if bd_factor is provided
-    sc = 1. if bd_factor is None else 1./(bds.min() * bd_factor)
+    # Both casts reproduce numpy < 2.0 exactly: the inner float64 because NEP 50
+    # no longer promotes float32-scalar * python-float to double, the outer float32
+    # because numpy 2.0 evaluates the in-place scaling below in double and rounds,
+    # where numpy 1.x narrowed the scalar first.
+    sc = 1. if bd_factor is None else np.float32(1./(np.float64(bds.min()) * bd_factor))
     poses[:,:3,3] *= sc
     bds *= sc
     
@@ -276,7 +283,9 @@ def load_llff_data(basedir, factor=8, recenter=True, bd_factor=.75, spherify=Fal
         up = normalize(poses[:, :3, 1].sum(0))
 
         # Find a reasonable "focus depth" for this dataset
-        close_depth, inf_depth = bds.min()*.9, bds.max()*5.
+        # np.float64() casts preserve the pre-NEP-50 (numpy < 2.0) double-precision
+        # promotion, which sets the spiral's focus depth and zdelta below.
+        close_depth, inf_depth = np.float64(bds.min())*.9, np.float64(bds.max())*5.
         dt = .75
         mean_dz = 1./(((1.-dt)/close_depth + dt/inf_depth))
         focal = mean_dz
@@ -285,7 +294,8 @@ def load_llff_data(basedir, factor=8, recenter=True, bd_factor=.75, spherify=Fal
         shrink_factor = .8
         zdelta = close_depth * .2
         tt = poses[:,:3,3] # ptstocam(poses[:3,3,:].T, c2w).T
-        rads = np.percentile(np.abs(tt), 90, 0)
+        # numpy < 2.0 returned float64 here even for a float32 input; keep that.
+        rads = np.percentile(np.abs(tt), 90, 0).astype(np.float64)
         c2w_path = c2w
         N_views = 120
         N_rots = 2

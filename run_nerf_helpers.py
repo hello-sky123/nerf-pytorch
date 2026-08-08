@@ -164,6 +164,11 @@ def get_rays(H, W, K, c2w):
 
 def get_rays_np(H, W, K, c2w):
     i, j = np.meshgrid(np.arange(W, dtype=np.float32), np.arange(H, dtype=np.float32), indexing='xy')
+    # K is float64, so under NEP 50 (numpy 2.0) its scalars would upcast the
+    # float32 grid and make dirs/rays_d float64 — doubling the memory of the
+    # big rays_rgb array in train(). Cast K down to keep the float32 result
+    # numpy < 2.0 produced.
+    K = np.asarray(K, dtype=np.float32)
     dirs = np.stack([(i-K[0][2])/K[0][0], -(j-K[1][2])/K[1][1], -np.ones_like(i)], -1)
     # Rotate ray directions from camera frame to the world frame
     rays_d = np.sum(dirs[..., np.newaxis, :] * c2w[:3,:3], -1)  # dot product, equals to: [c2w.dot(dir) for dir in dirs]
