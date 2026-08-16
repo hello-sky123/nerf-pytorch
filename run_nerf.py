@@ -430,13 +430,15 @@ def render_rays(ray_batch,
 
 def config_parser():
 
+    # 创建一个参数解析器对象
     parser = configargparse.ArgumentParser()
+    # 添加一个命令行参数 --config，用于指定配置文件的路径
     parser.add_argument('--config', is_config_file=True,
                         help='config file path')
     parser.add_argument("--exp_name", type=str,
                         help='experiment name')
     parser.add_argument("--base_dir", type=str, default='./logs/',
-                        help='where to store ckpts and logs')
+                        help='where to store checkpoints and logs')
     parser.add_argument("--data_dir", type=str, default='./data/llff/fern',
                         help='input data directory')
 
@@ -540,7 +542,7 @@ def config_parser():
     parser.add_argument("--weights_interval", type=int, default=10000,
                         help='frequency of weight ckpt saving')
     parser.add_argument("--testset_interval", type=int, default=50000,
-                        help='frequency of testset saving')
+                        help='frequency of test set saving')
     parser.add_argument("--video_interval", type=int, default=50000,
                         help='frequency of render_poses video saving')
 
@@ -550,7 +552,7 @@ def config_parser():
 def train():
 
     parser = config_parser()
-    args = parser.parse_args()
+    args = parser.parse_args()  # 解析命令行配置参数
 
     # Load data
     K = None
