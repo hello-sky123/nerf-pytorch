@@ -71,7 +71,12 @@ def load_blender_data(base_dir, half_res=False, test_skip=1):
     poses = np.concatenate(all_poses, 0)
 
     H, W = imgs[0].shape[:2]
-    camera_angle_x = float(meta['camera_angle_x'])
+    # Read the split explicitly instead of relying on `meta` leaking out of the
+    # loop above, which is what made this look like a use-before-assignment.
+    # 'test' is the last split, so this is the value the leaked variable held.
+    # In a real Blender dataset all three splits share one camera_angle_x, so
+    # which split it comes from does not matter.
+    camera_angle_x = float(metas['test']['camera_angle_x'])
     focal = .5 * W / np.tan(.5 * camera_angle_x)
 
     render_poses = torch.stack([pose_spherical(angle, -30.0, 4.0)
