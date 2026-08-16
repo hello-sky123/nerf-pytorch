@@ -49,15 +49,15 @@ class Embedder:
         return torch.cat([fn(inputs) for fn in self.embed_fns], -1)
 
 
-def get_embedder(multires, i=0):
+def get_embedder(multi_res, i=0):
     if i == -1:
         return nn.Identity(), 3
 
     embed_kwargs = {
         'include_input': True,
         'input_dims': 3,
-        'max_freq_log2': multires - 1,
-        'num_freqs': multires,
+        'max_freq_log2': multi_res - 1,
+        'num_freqs': multi_res,
         'log_sampling': True,
         'periodic_fns': [torch.sin, torch.cos],
     }
@@ -218,7 +218,7 @@ def ndc_rays(H, W, focal, near, rays_o, rays_d):
 
 
 # Hierarchical sampling (section 5.2)
-def sample_pdf(bins, weights, N_samples, det=False, pytest=False):
+def sample_pdf(bins, weights, n_samples, det=False, pytest=False):
     # Get pdf
     weights = weights + 1e-5  # prevent nans
     pdf = weights / torch.sum(weights, -1, keepdim=True)
@@ -227,17 +227,17 @@ def sample_pdf(bins, weights, N_samples, det=False, pytest=False):
 
     # Take uniform samples
     if det:
-        u = torch.linspace(0., 1., steps=N_samples)
-        u = u.expand(list(cdf.shape[:-1]) + [N_samples])
+        u = torch.linspace(0., 1., steps=n_samples)
+        u = u.expand(list(cdf.shape[:-1]) + [n_samples])
     else:
-        u = torch.rand(list(cdf.shape[:-1]) + [N_samples])
+        u = torch.rand(list(cdf.shape[:-1]) + [n_samples])
 
     # Pytest, overwrite u with numpy's fixed random numbers
     if pytest:
         np.random.seed(0)
-        new_shape = list(cdf.shape[:-1]) + [N_samples]
+        new_shape = list(cdf.shape[:-1]) + [n_samples]
         if det:
-            u = np.linspace(0., 1., N_samples)
+            u = np.linspace(0., 1., n_samples)
             u = np.broadcast_to(u, new_shape)
         else:
             u = np.random.rand(*new_shape)
@@ -250,7 +250,7 @@ def sample_pdf(bins, weights, N_samples, det=False, pytest=False):
     inds = torch.searchsorted(cdf, u, right=True)
     below = torch.max(torch.zeros_like(inds - 1), inds - 1)
     above = torch.min((cdf.shape[-1] - 1) * torch.ones_like(inds), inds)
-    inds_g = torch.stack([below, above], -1)  # (batch, N_samples, 2)
+    inds_g = torch.stack([below, above], -1)  # (batch, n_samples, 2)
 
     # cdf_g = tf.gather(cdf, inds_g, axis=-1, batch_dims=len(inds_g.shape)-2)
     # bins_g = tf.gather(bins, inds_g, axis=-1, batch_dims=len(inds_g.shape)-2)

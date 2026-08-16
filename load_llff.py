@@ -6,14 +6,14 @@ import imageio.v2 as imageio
 # Slightly modified version of LLFF data loading code
 # see https://github.com/Fyusion/LLFF for original
 
-def _minify(basedir, factors=[], resolutions=[]):
+def _minify(base_dir, factors=[], resolutions=[]):
     needtoload = False
     for r in factors:
-        imgdir = os.path.join(basedir, 'images_{}'.format(r))
+        imgdir = os.path.join(base_dir, 'images_{}'.format(r))
         if not os.path.exists(imgdir):
             needtoload = True
     for r in resolutions:
-        imgdir = os.path.join(basedir, 'images_{}x{}'.format(r[1], r[0]))
+        imgdir = os.path.join(base_dir, 'images_{}x{}'.format(r[1], r[0]))
         if not os.path.exists(imgdir):
             needtoload = True
     if not needtoload:
@@ -30,9 +30,9 @@ def _minify(basedir, factors=[], resolutions=[]):
             'ImageMagick (mogrify) is required to resize the LLFF images in {!r} '
             'but was not found. Either install it (e.g. `sudo apt install '
             'imagemagick`) or pre-create the resized image directory '
-            'yourself.'.format(basedir))
+            'yourself.'.format(base_dir))
 
-    imgdir = os.path.join(basedir, 'images')
+    imgdir = os.path.join(base_dir, 'images')
     imgs = [os.path.join(imgdir, f) for f in sorted(os.listdir(imgdir))]
     imgs = [f for f in imgs if any([f.endswith(ex)
                                    for ex in ['JPG', 'jpg', 'png', 'jpeg', 'PNG']])]
@@ -47,11 +47,11 @@ def _minify(basedir, factors=[], resolutions=[]):
         else:
             name = 'images_{}x{}'.format(r[1], r[0])
             resizearg = '{}x{}'.format(r[1], r[0])
-        imgdir = os.path.join(basedir, name)
+        imgdir = os.path.join(base_dir, name)
         if os.path.exists(imgdir):
             continue
 
-        print('Minifying', r, basedir)
+        print('Minifying', r, base_dir)
 
         os.makedirs(imgdir)
         check_output('cp {}/* {}'.format(imgdir_orig, imgdir), shell=True)
@@ -69,14 +69,14 @@ def _minify(basedir, factors=[], resolutions=[]):
         print('Done')
 
 
-def _load_data(basedir, factor=None, width=None, height=None, load_imgs=True):
+def _load_data(base_dir, factor=None, width=None, height=None, load_imgs=True):
 
-    poses_arr = np.load(os.path.join(basedir, 'poses_bounds.npy'))
+    poses_arr = np.load(os.path.join(base_dir, 'poses_bounds.npy'))
     poses = poses_arr[:, :-2].reshape([-1, 3, 5]).transpose([1, 2, 0])
     bds = poses_arr[:, -2:].transpose([1, 0])
 
-    img0 = [os.path.join(basedir, 'images', f)
-            for f in sorted(os.listdir(os.path.join(basedir, 'images')))
+    img0 = [os.path.join(base_dir, 'images', f)
+            for f in sorted(os.listdir(os.path.join(base_dir, 'images')))
             if f.endswith('JPG') or f.endswith('jpg') or f.endswith('png')][0]
     sh = imageio.imread(img0).shape
 
@@ -84,22 +84,22 @@ def _load_data(basedir, factor=None, width=None, height=None, load_imgs=True):
 
     if factor is not None:
         sfx = '_{}'.format(factor)
-        _minify(basedir, factors=[factor])
+        _minify(base_dir, factors=[factor])
         factor = factor
     elif height is not None:
         factor = sh[0] / float(height)
         width = int(sh[1] / factor)
-        _minify(basedir, resolutions=[[height, width]])
+        _minify(base_dir, resolutions=[[height, width]])
         sfx = '_{}x{}'.format(width, height)
     elif width is not None:
         factor = sh[1] / float(width)
         height = int(sh[0] / factor)
-        _minify(basedir, resolutions=[[height, width]])
+        _minify(base_dir, resolutions=[[height, width]])
         sfx = '_{}x{}'.format(width, height)
     else:
         factor = 1
 
-    imgdir = os.path.join(basedir, 'images' + sfx)
+    imgdir = os.path.join(base_dir, 'images' + sfx)
     if not os.path.exists(imgdir):
         print(imgdir, 'does not exist, returning')
         return
@@ -259,12 +259,12 @@ def spherify_poses(poses, bds):
     return poses_reset, new_poses, bds
 
 
-def load_llff_data(basedir, factor=8, recenter=True, bd_factor=.75, spherify=False,
+def load_llff_data(base_dir, factor=8, recenter=True, bd_factor=.75, spherify=False,
                    path_zflat=False):
 
     # factor=8 downsamples original imgs by 8x
-    poses, bds, imgs = _load_data(basedir, factor=factor)
-    print('Loaded', basedir, bds.min(), bds.max())
+    poses, bds, imgs = _load_data(base_dir, factor=factor)
+    print('Loaded', base_dir, bds.min(), bds.max())
 
     # Correct rotation matrix ordering and move variable dim to axis 0
     poses = np.concatenate([poses[:, 1:2, :], -poses[:, 0:1, :], poses[:, 2:, :]], 1)

@@ -1,14 +1,14 @@
-expname = fern_test
-basedir = ./logs
-datadir = ./data/nerf_llff_data/fern
+exp_name = fern_test
+base_dir = ./logs
+data_dir = ./data/nerf_llff_data/fern
 dataset_type = llff
 
 factor = 8
-llffhold = 8
+llff_hold = 8
 
-N_rand = 1024
-N_samples = 64
-N_importance = 64
+n_rand = 1024
+n_samples = 64
+n_importance = 64
 
 use_viewdirs = True
 raw_noise_std = 1e0

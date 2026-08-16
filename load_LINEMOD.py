@@ -34,11 +34,11 @@ def pose_spherical(theta, phi, radius):
     return c2w
 
 
-def load_LINEMOD_data(basedir, half_res=False, testskip=1):
+def load_LINEMOD_data(base_dir, half_res=False, test_skip=1):
     splits = ['train', 'val', 'test']
     metas = {}
     for s in splits:
-        with open(os.path.join(basedir, 'transforms_{}.json'.format(s)), 'r') as fp:
+        with open(os.path.join(base_dir, 'transforms_{}.json'.format(s)), 'r') as fp:
             metas[s] = json.load(fp)
 
     all_imgs = []
@@ -48,10 +48,10 @@ def load_LINEMOD_data(basedir, half_res=False, testskip=1):
         meta = metas[s]
         imgs = []
         poses = []
-        if s == 'train' or testskip == 0:
+        if s == 'train' or test_skip == 0:
             skip = 1
         else:
-            skip = testskip
+            skip = test_skip
 
         for idx_test, frame in enumerate(meta['frames'][::skip]):
             fname = frame['file_path']

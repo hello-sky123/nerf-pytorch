@@ -7,37 +7,40 @@ import numpy as np
 import torch
 
 trans_t = lambda t: torch.Tensor([
-    [1, 0, 0, 0],
-    [0, 1, 0, 0],
-    [0, 0, 1, t],
-    [0, 0, 0, 1]]).float()
+    [1., 0., 0., 0.],
+    [0., 1., 0., 0.],
+    [0., 0., 1., t],
+    [0., 0., 0., 1.]]).float()
 
 rot_phi = lambda phi: torch.Tensor([
-    [1, 0, 0, 0],
-    [0, np.cos(phi), -np.sin(phi), 0],
-    [0, np.sin(phi), np.cos(phi), 0],
-    [0, 0, 0, 1]]).float()
+    [1., 0., 0., 0.],
+    [0., np.cos(phi), -np.sin(phi), 0.],
+    [0., np.sin(phi), np.cos(phi), 0.],
+    [0., 0., 0., 1.]]).float()
 
 rot_theta = lambda th: torch.Tensor([
-    [np.cos(th), 0, -np.sin(th), 0],
-    [0, 1, 0, 0],
-    [np.sin(th), 0, np.cos(th), 0],
-    [0, 0, 0, 1]]).float()
+    [np.cos(th), 0., -np.sin(th), 0.],
+    [0., 1., 0., 0.],
+    [np.sin(th), 0., np.cos(th), 0.],
+    [0., 0., 0., 1.]]).float()
 
 
 def pose_spherical(theta, phi, radius):
     c2w = trans_t(radius)
     c2w = rot_phi(phi / 180. * np.pi) @ c2w
     c2w = rot_theta(theta / 180. * np.pi) @ c2w
-    c2w = torch.Tensor(np.array([[-1, 0, 0, 0], [0, 0, 1, 0], [0, 1, 0, 0], [0, 0, 0, 1]])) @ c2w
+    c2w = torch.Tensor(np.array([[-1., 0., 0., 0.],
+                                 [0., 0., 1., 0.],
+                                 [0., 1., 0., 0.],
+                                 [0., 0., 0., 1.]])) @ c2w
     return c2w
 
 
-def load_blender_data(basedir, half_res=False, testskip=1):
+def load_blender_data(base_dir, half_res=False, test_skip=1):
     splits = ['train', 'val', 'test']
     metas = {}
     for s in splits:
-        with open(os.path.join(basedir, 'transforms_{}.json'.format(s)), 'r') as fp:
+        with open(os.path.join(base_dir, 'transforms_{}.json'.format(s)), 'r') as fp:
             metas[s] = json.load(fp)
 
     all_imgs = []
@@ -47,13 +50,13 @@ def load_blender_data(basedir, half_res=False, testskip=1):
         meta = metas[s]
         imgs = []
         poses = []
-        if s == 'train' or testskip == 0:
+        if s == 'train' or test_skip == 0:
             skip = 1
         else:
-            skip = testskip
+            skip = test_skip
 
         for frame in meta['frames'][::skip]:
-            fname = os.path.join(basedir, frame['file_path'] + '.png')
+            fname = os.path.join(base_dir, frame['file_path'] + '.png')
             imgs.append(imageio.imread(fname))
             poses.append(np.array(frame['transform_matrix']))
         imgs = (np.array(imgs) / 255.).astype(np.float32)  # keep all 4 channels (RGBA)

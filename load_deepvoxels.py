@@ -3,7 +3,7 @@ import numpy as np
 import imageio.v2 as imageio
 
 
-def load_dv_data(scene='cube', basedir='/data/deepvoxels', testskip=8):
+def load_dv_data(scene='cube', base_dir='/data/deepvoxels', test_skip=8):
 
     def parse_intrinsics(filepath, trgt_sidelength, invert_y=False):
         # Get camera intrinsics
@@ -51,7 +51,7 @@ def load_dv_data(scene='cube', basedir='/data/deepvoxels', testskip=8):
 
     H = 512
     W = 512
-    deepvoxels_base = '{}/train/{}/'.format(basedir, scene)
+    deepvoxels_base = '{}/train/{}/'.format(base_dir, scene)
 
     full_intrinsic, grid_barycenter, scale, near_plane, world2cam_poses = parse_intrinsics(
         os.path.join(deepvoxels_base, 'intrinsics.txt'), H)
@@ -74,25 +74,25 @@ def load_dv_data(scene='cube', basedir='/data/deepvoxels', testskip=8):
 
     posedir = os.path.join(deepvoxels_base, 'pose')
     poses = dir2poses(posedir)
-    testposes = dir2poses('{}/test/{}/pose'.format(basedir, scene))
-    testposes = testposes[::testskip]
-    valposes = dir2poses('{}/validation/{}/pose'.format(basedir, scene))
-    valposes = valposes[::testskip]
+    testposes = dir2poses('{}/test/{}/pose'.format(base_dir, scene))
+    testposes = testposes[::test_skip]
+    valposes = dir2poses('{}/validation/{}/pose'.format(base_dir, scene))
+    valposes = valposes[::test_skip]
 
     imgfiles = [f for f in sorted(os.listdir(os.path.join(deepvoxels_base, 'rgb')))
                 if f.endswith('png')]
     imgs = np.stack([imageio.imread(os.path.join(deepvoxels_base, 'rgb', f)) / 255.
                      for f in imgfiles], 0).astype(np.float32)
 
-    testimgd = '{}/test/{}/rgb'.format(basedir, scene)
+    testimgd = '{}/test/{}/rgb'.format(base_dir, scene)
     imgfiles = [f for f in sorted(os.listdir(testimgd)) if f.endswith('png')]
     testimgs = np.stack([imageio.imread(os.path.join(testimgd, f)) / 255.
-                         for f in imgfiles[::testskip]], 0).astype(np.float32)
+                         for f in imgfiles[::test_skip]], 0).astype(np.float32)
 
-    valimgd = '{}/validation/{}/rgb'.format(basedir, scene)
+    valimgd = '{}/validation/{}/rgb'.format(base_dir, scene)
     imgfiles = [f for f in sorted(os.listdir(valimgd)) if f.endswith('png')]
     valimgs = np.stack([imageio.imread(os.path.join(valimgd, f)) / 255.
-                        for f in imgfiles[::testskip]], 0).astype(np.float32)
+                        for f in imgfiles[::test_skip]], 0).astype(np.float32)
 
     all_imgs = [imgs, valimgs, testimgs]
     counts = [0] + [x.shape[0] for x in all_imgs]
