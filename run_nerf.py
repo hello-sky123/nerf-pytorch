@@ -1,18 +1,18 @@
 import os
 import time
 
+import configargparse
 import imageio.v2 as imageio
 import numpy as np
 import torch
 import torch.nn.functional as F
 from tqdm import tqdm, trange
 
-from run_nerf_helpers import *
-
-from load_llff import load_llff_data
-from load_deepvoxels import load_dv_data
 from load_blender import load_blender_data
+from load_deepvoxels import load_dv_data
 from load_LINEMOD import load_LINEMOD_data
+from load_llff import load_llff_data
+from run_nerf_helpers import *
 
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -429,7 +429,6 @@ def render_rays(ray_batch,
 
 def config_parser():
 
-    import configargparse
     parser = configargparse.ArgumentParser()
     parser.add_argument('--config', is_config_file=True,
                         help='config file path')
