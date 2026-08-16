@@ -54,10 +54,10 @@ def load_LINEMOD_data(base_dir, half_res=False, test_skip=1):
             skip = test_skip
 
         for idx_test, frame in enumerate(meta['frames'][::skip]):
-            fname = frame['file_path']
+            f_name = frame['file_path']
             if s == 'test':
-                print(f"{idx_test}th test frame: {fname}")
-            imgs.append(imageio.imread(fname))
+                print(f"{idx_test}th test frame: {f_name}")
+            imgs.append(imageio.imread(f_name))
             poses.append(np.array(frame['transform_matrix']))
         imgs = (np.array(imgs) / 255.).astype(np.float32)  # keep all 4 channels (RGBA)
         poses = np.array(poses).astype(np.float32)
