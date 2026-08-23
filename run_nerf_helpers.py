@@ -18,6 +18,8 @@ to8b = lambda x: (255 * np.clip(x, 0, 1)).astype(np.uint8)
 # Positional encoding (section 5.1)
 class Embedder:
     def __init__(self, **kwargs):
+        self.out_dim = None
+        self.embed_fns = None
         self.kwargs = kwargs
         self.create_embedding_fn()
 
@@ -33,9 +35,9 @@ class Embedder:
         N_freqs = self.kwargs['num_freqs']
 
         if self.kwargs['log_sampling']:
-            freq_bands = 2.**torch.linspace(0., max_freq, steps=N_freqs)
+            freq_bands = 2. ** torch.linspace(0., max_freq, steps=N_freqs)
         else:
-            freq_bands = torch.linspace(2.**0., 2.**max_freq, steps=N_freqs)
+            freq_bands = torch.linspace(2. ** 0., 2. ** max_freq, steps=N_freqs)
 
         for freq in freq_bands:
             for p_fn in self.kwargs['periodic_fns']:
@@ -78,8 +80,6 @@ class NeRF(nn.Module):
         self.W = W
         self.input_ch = input_ch
         self.input_ch_views = input_ch_views
-        # A list default would be created once at definition time and shared by
-        # every instance, so a caller mutating it would affect later ones.
         self.skips = [4] if skips is None else skips
         self.use_viewdirs = use_viewdirs
 
@@ -88,13 +88,7 @@ class NeRF(nn.Module):
             + [nn.Linear(W, W) if i not in self.skips else nn.Linear(W + input_ch, W)
                for i in range(D - 1)])
 
-        # Implementation according to the official code release
-        # https://github.com/bmild/nerf/blob/master/run_nerf_helpers.py#L104-L105
         self.views_linears = nn.ModuleList([nn.Linear(input_ch_views + W, W // 2)])
-
-        # Implementation according to the paper
-        # self.views_linears = nn.ModuleList(
-        #     [nn.Linear(input_ch_views + W, W//2)] + [nn.Linear(W//2, W//2) for i in range(D//2)])
 
         if use_viewdirs:
             self.feature_linear = nn.Linear(W, W)
@@ -167,7 +161,7 @@ class NeRF(nn.Module):
 # Ray helpers
 def get_rays(H, W, K, c2w):
     i, j = torch.meshgrid(torch.linspace(0, W - 1, W), torch.linspace(0, H - 1, H),
-                          indexing='ij')  # pytorch's meshgrid has indexing='ij'
+                          indexing='ij')  # PyTorch's meshgrid has indexing='ij'
     i = i.t()
     j = j.t()
     dirs = torch.stack([(i - K[0][2]) / K[0][0], -(j - K[1][2]) /
@@ -234,7 +228,7 @@ def sample_pdf(bins, weights, n_samples, det=False, pytest=False):
     else:
         u = torch.rand(list(cdf.shape[:-1]) + [n_samples])
 
-    # Pytest, overwrite u with numpy's fixed random numbers
+    # Pytest, overwrite u with NumPy's fixed random numbers
     if pytest:
         np.random.seed(0)
         new_shape = list(cdf.shape[:-1]) + [n_samples]

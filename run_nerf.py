@@ -182,6 +182,7 @@ def create_nerf(args):
     embeddirs_fn = None
     if args.use_viewdirs:
         embeddirs_fn, input_ch_views = get_embedder(args.multi_res_views, args.embed_type)
+
     output_ch = 5 if args.n_importance > 0 else 4
     skips = [4]
     model = NeRF(D=args.net_depth, W=args.net_width,
