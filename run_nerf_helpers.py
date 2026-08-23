@@ -69,7 +69,7 @@ def get_embedder(multi_res, i=0):
 
 # Model
 class NeRF(nn.Module):
-    def __init__(self, D=8, W=256, input_ch=3, input_ch_views=3, output_ch=4, skips=[4],
+    def __init__(self, D=8, W=256, input_ch=3, input_ch_views=3, output_ch=4, skips=None,
                  use_viewdirs=False):
         """
         """
@@ -78,7 +78,9 @@ class NeRF(nn.Module):
         self.W = W
         self.input_ch = input_ch
         self.input_ch_views = input_ch_views
-        self.skips = skips
+        # A list default would be created once at definition time and shared by
+        # every instance, so a caller mutating it would affect later ones.
+        self.skips = [4] if skips is None else skips
         self.use_viewdirs = use_viewdirs
 
         self.pts_linears = nn.ModuleList(

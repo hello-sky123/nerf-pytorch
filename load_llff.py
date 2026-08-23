@@ -6,7 +6,11 @@ import imageio.v2 as imageio
 # Slightly modified version of LLFF data loading code
 # see https://github.com/Fyusion/LLFF for original
 
-def _minify(base_dir, factors=[], resolutions=[]):
+def _minify(base_dir, factors=None, resolutions=None):
+    # List defaults would be created once at definition time and shared across
+    # calls, so a caller mutating one would affect later calls.
+    factors = [] if factors is None else factors
+    resolutions = [] if resolutions is None else resolutions
     needtoload = False
     for r in factors:
         imgdir = os.path.join(base_dir, 'images_{}'.format(r))
