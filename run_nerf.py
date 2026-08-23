@@ -176,13 +176,16 @@ def render_path(render_poses, hwf, K, chunk, render_kwargs, gt_imgs=None, savedi
 def create_nerf(args):
     """Instantiate NeRF's MLP model.
     """
+    # 组装“空间坐标”输入端
     embed_fn, input_ch = get_embedder(args.multi_res, args.embed_type)
 
+    # 组装“视角方向”输入端
     input_ch_views = 0
     embeddirs_fn = None
     if args.use_viewdirs:
         embeddirs_fn, input_ch_views = get_embedder(args.multi_res_views, args.embed_type)
 
+    # 输出通道数和跳层连接
     output_ch = 5 if args.n_importance > 0 else 4
     skips = [4]
     model = NeRF(D=args.net_depth, W=args.net_width,
@@ -594,6 +597,8 @@ def train():
         near = 2.
         far = 6.
 
+        # 处理带有透明度图片的 alpha 混合操作，images[..., :3] 表示前面的维度全都要，最后一个维度取前三个
+        # 最终颜色 = 原始颜色 × 不透明度 + 背景颜色 × 透明度
         if args.white_bkgd:
             images = images[..., :3] * images[..., -1:] + (1. - images[..., -1:])
         else:
@@ -648,8 +653,9 @@ def train():
     exp_name = args.exp_name
     os.makedirs(os.path.join(base_dir, exp_name), exist_ok=True)
     f = os.path.join(base_dir, exp_name, 'args.txt')
+    # 把当前这次训练用到的所有参数以文本形式备份保存下来，以保证实验的“可重复性”
     with open(f, 'w') as file:
-        for arg in sorted(vars(args)):
+        for arg in sorted(vars(args)):  # vars 将对象转为字典，sorted 排序
             attr = getattr(args, arg)
             file.write('{} = {}\n'.format(arg, attr))
     if args.config is not None:

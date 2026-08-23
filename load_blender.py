@@ -41,7 +41,7 @@ def load_blender_data(base_dir, half_res=False, test_skip=1):
     metas = {}
     for s in splits:
         with open(os.path.join(base_dir, 'transforms_{}.json'.format(s)), 'r') as fp:
-            metas[s] = json.load(fp)
+            metas[s] = json.load(fp)  # 将读取到的巨型字典存入 metas
 
     all_imgs = []
     all_poses = []
@@ -65,13 +65,15 @@ def load_blender_data(base_dir, half_res=False, test_skip=1):
         all_imgs.append(imgs)
         all_poses.append(poses)
 
+    # 将边界变成索引区间
     i_split = [np.arange(counts[i], counts[i + 1]) for i in range(3)]
 
-    imgs = np.concatenate(all_imgs, 0)
+    imgs = np.concatenate(all_imgs, 0)  # 按第一维（三个集合）连接
     poses = np.concatenate(all_poses, 0)
 
     H, W = imgs[0].shape[:2]
 
+    # camera_angle_x 是相机的水平视场角
     camera_angle_x = float(metas['test']['camera_angle_x'])
     focal = 0.5 * W / np.tan(0.5 * camera_angle_x)
 

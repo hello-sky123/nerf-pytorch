@@ -23,12 +23,13 @@ class Embedder:
         self.kwargs = kwargs
         self.create_embedding_fn()
 
+    # 预先生成一堆处理函数
     def create_embedding_fn(self):
         embed_fns = []
         d = self.kwargs['input_dims']
         out_dim = 0
         if self.kwargs['include_input']:
-            embed_fns.append(lambda x: x)
+            embed_fns.append(lambda x: x)  # 加入一个“原样输出”函数
             out_dim += d
 
         max_freq = self.kwargs['max_freq_log2']
@@ -51,20 +52,23 @@ class Embedder:
         return torch.cat([fn(inputs) for fn in self.embed_fns], -1)
 
 
+# 获取位置编码
 def get_embedder(multi_res, i=0):
     if i == -1:
         return nn.Identity(), 3
 
+    # 映射器配置
     embed_kwargs = {
-        'include_input': True,
-        'input_dims': 3,
-        'max_freq_log2': multi_res - 1,
-        'num_freqs': multi_res,
-        'log_sampling': True,
-        'periodic_fns': [torch.sin, torch.cos],
+        'include_input': True,                   # 编码后的向量里是否保留原始的 x, y, z
+        'input_dims': 3,                         # 输入维度
+        'max_freq_log2': multi_res - 1,          # 最高频率的对数
+        'num_freqs': multi_res,                  # 一共要生成多少个频率频段（L 个）
+        'log_sampling': True,                    # 频率增长是否是对数增长
+        'periodic_fns': [torch.sin, torch.cos],  # 频率函数列表
     }
 
     embedder_obj = Embedder(**embed_kwargs)
+    # 把刚刚实例化的 embedder_obj 包装了起来，以后只要调用 embed(坐标)，它就会自动去调用里面的 .embed() 方法进行高维映射
     embed = lambda x, eo=embedder_obj: eo.embed(x)
     return embed, embedder_obj.out_dim
 
@@ -75,7 +79,7 @@ class NeRF(nn.Module):
                  use_viewdirs=False):
         """
         """
-        super(NeRF, self).__init__()
+        super(NeRF, self).__init__()  # 调用父类的初始化方法
         self.D = D
         self.W = W
         self.input_ch = input_ch
@@ -83,17 +87,21 @@ class NeRF(nn.Module):
         self.skips = [4] if skips is None else skips
         self.use_viewdirs = use_viewdirs
 
+        # nn.Linear 全连接层，nn.ModuleList 神经网络层列表
+        # 只用普通的 MLP，网络在经过多层传播后，很容易“遗忘”最初输入的精确 3D 坐标位置信息（高频细节丢失）
+        # 为了解决这个问题，NeRF 论文提出：在网络中间层，把原始的位置编码特征重新拼接进来
         self.pts_linears = nn.ModuleList(
             [nn.Linear(input_ch, W)]
             + [nn.Linear(W, W) if i not in self.skips else nn.Linear(W + input_ch, W)
                for i in range(D - 1)])
 
+        # 与视角相关的颜色预测
         self.views_linears = nn.ModuleList([nn.Linear(input_ch_views + W, W // 2)])
 
         if use_viewdirs:
-            self.feature_linear = nn.Linear(W, W)
-            self.alpha_linear = nn.Linear(W, 1)
-            self.rgb_linear = nn.Linear(W // 2, 3)
+            self.feature_linear = nn.Linear(W, W)              # 提取最终的空间几何特征
+            self.alpha_linear = nn.Linear(W, 1)     # 输出体密度（σ）
+            self.rgb_linear = nn.Linear(W // 2, 3)  # 输出颜色（RGB）
         else:
             self.output_linear = nn.Linear(W, output_ch)
 
