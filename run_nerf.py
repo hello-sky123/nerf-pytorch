@@ -185,18 +185,17 @@ def create_nerf(args):
     if args.use_viewdirs:
         embeddirs_fn, input_ch_views = get_embedder(args.multi_res_views, args.embed_type)
 
-    # 输出通道数和跳层连接
-    output_ch = 5 if args.n_importance > 0 else 4
+    # 跳层连接
     skips = [4]
     model = NeRF(D=args.net_depth, W=args.net_width,
-                 input_ch=input_ch, output_ch=output_ch, skips=skips,
+                 input_ch=input_ch, skips=skips,
                  input_ch_views=input_ch_views, use_viewdirs=args.use_viewdirs).to(device)
     grad_vars = list(model.parameters())
 
     model_fine = None
     if args.n_importance > 0:
         model_fine = NeRF(D=args.net_depth_fine, W=args.net_width_fine,
-                          input_ch=input_ch, output_ch=output_ch, skips=skips,
+                          input_ch=input_ch, skips=skips,
                           input_ch_views=input_ch_views, use_viewdirs=args.use_viewdirs).to(device)
         grad_vars += list(model_fine.parameters())
 
