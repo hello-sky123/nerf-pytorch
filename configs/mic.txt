@@ -5,7 +5,7 @@ dataset_type = blender
 
 no_batching = True
 
-use_viewdirs = True
+use_view_dirs = True
 white_bkgd = True
 learning_rate_decay = 500
 

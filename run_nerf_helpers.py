@@ -76,7 +76,7 @@ def get_embedder(multi_res, i=0):
 # Model
 class NeRF(nn.Module):
     def __init__(self, D=8, W=256, input_ch=3, input_ch_views=3, output_ch=4, skips=None,
-                 use_viewdirs=False):
+                 use_view_dirs=False):
         """
         """
         super(NeRF, self).__init__()  # 调用父类的初始化方法
@@ -85,7 +85,7 @@ class NeRF(nn.Module):
         self.input_ch = input_ch
         self.input_ch_views = input_ch_views
         self.skips = [4] if skips is None else skips
-        self.use_viewdirs = use_viewdirs
+        self.use_view_dirs = use_view_dirs
 
         # nn.Linear 全连接层，nn.ModuleList 神经网络层列表
         # 只用普通的 MLP，网络在经过多层传播后，很容易“遗忘”最初输入的精确 3D 坐标位置信息（高频细节丢失）
@@ -98,7 +98,7 @@ class NeRF(nn.Module):
         # 与视角相关的颜色预测
         self.views_linears = nn.ModuleList([nn.Linear(input_ch_views + W, W // 2)])
 
-        if use_viewdirs:
+        if use_view_dirs:
             self.feature_linear = nn.Linear(W, W)              # 提取最终的空间几何特征
             self.alpha_linear = nn.Linear(W, 1)     # 输出体密度（σ）
             self.rgb_linear = nn.Linear(W // 2, 3)  # 输出颜色（RGB）
@@ -114,7 +114,7 @@ class NeRF(nn.Module):
             if i in self.skips:
                 h = torch.cat([input_pts, h], -1)
 
-        if self.use_viewdirs:
+        if self.use_view_dirs:
             alpha = self.alpha_linear(h)
             feature = self.feature_linear(h)
             h = torch.cat([feature, input_views], -1)
@@ -131,7 +131,7 @@ class NeRF(nn.Module):
         return outputs
 
     def load_weights_from_keras(self, weights):
-        assert self.use_viewdirs, "Not implemented if use_viewdirs=False"
+        assert self.use_view_dirs, "Not implemented if use_view_dirs=False"
 
         # Load pts_linears
         for i in range(self.D):
