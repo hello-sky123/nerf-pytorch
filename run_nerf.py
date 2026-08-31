@@ -213,8 +213,8 @@ def create_nerf(args):
     optimizer = torch.optim.Adam(params=grad_vars, lr=args.learning_rate, betas=(0.9, 0.999))
 
     start = 0
-    base_dir = args.base_dir
-    exp_name = args.exp_name
+    base_dir: str = args.base_dir
+    exp_name: str = args.exp_name
 
     ##########################
 
@@ -654,8 +654,8 @@ def train():
         render_poses = np.array(poses[i_test])
 
     # Create log dir and copy the config file
-    base_dir = args.base_dir
-    exp_name = args.exp_name
+    base_dir: str = args.base_dir
+    exp_name: str = args.exp_name
     os.makedirs(os.path.join(base_dir, exp_name), exist_ok=True)
     f = os.path.join(base_dir, exp_name, 'args.txt')
     # 把当前这次训练用到的所有参数以文本形式备份保存下来，以保证实验的“可重复性”
