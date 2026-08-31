@@ -21,6 +21,7 @@ np.random.seed(0)
 DEBUG = False
 
 
+# 把一个一次处理全部数据的函数 fn，包装成分批（分块）处理的版本，防止数据量太大时显存溢出
 def batchify(fn, chunk):
     """Constructs a version of 'fn' that applies to smaller batches.
     """
@@ -28,24 +29,28 @@ def batchify(fn, chunk):
         return fn
 
     def ret(inputs):
-        return torch.cat([fn(inputs[i:i + chunk]) for i in range(0, inputs.shape[0], chunk)], 0)
+        return torch.cat([fn(inputs[i: i + chunk]) for i in range(0, inputs.shape[0], chunk)], 0)
     return ret
 
 
 def run_network(inputs, view_dirs, fn, embed_fn, embed_dirs_fn, net_chunk=1024 * 64):
     """Prepares inputs and applies network 'fn'.
+    inputs 的维度是 [N_rays, N_samples, 3]，view_dirs 的维度是 [N_rays, 3]，
+    fn 是 NeRF 模型，embed_fn 是位置编码函数，embed_dirs_fn 是方向编码函数。
     """
+    # 将 inputs 展平为 [N_rays * N_samples, 3] 的形状
     inputs_flat = torch.reshape(inputs, [-1, inputs.shape[-1]])
-    embedded = embed_fn(inputs_flat)
+    embedded = embed_fn(inputs_flat)  # 位置编码
 
     if view_dirs is not None:
+        # 每条光线只有一个方向，但网络需要为每个采样点提供方向信息，[:, None] None 索引的作用是在该位置插入一个大小为 1 的新维度
         input_dirs = view_dirs[:, None].expand(inputs.shape)
         input_dirs_flat = torch.reshape(input_dirs, [-1, input_dirs.shape[-1]])
         embedded_dirs = embed_dirs_fn(input_dirs_flat)
         embedded = torch.cat([embedded, embedded_dirs], -1)
 
     outputs_flat = batchify(fn, net_chunk)(embedded)
-    outputs = torch.reshape(outputs_flat, list(inputs.shape[:-1]) + [outputs_flat.shape[-1]])
+    outputs = torch.reshape(outputs_flat, list(inputs.shape[: -1]) + [outputs_flat.shape[-1]])
     return outputs
 
 
@@ -199,6 +204,7 @@ def create_nerf(args):
                           input_ch_views=input_ch_views, use_view_dirs=args.use_view_dirs).to(device)
         grad_vars += list(model_fine.parameters())
 
+    # 使用 lambda 函数预先绑定参数 embed_fn、embed_dirs_fn 和 net_chunk，方便后续调用
     network_query_fn = lambda inputs, view_dirs, network_fn: run_network(
         inputs, view_dirs, network_fn,
         embed_fn=embed_fn, embed_dirs_fn=embed_dirs_fn, net_chunk=args.net_chunk)
@@ -226,7 +232,7 @@ def create_nerf(args):
         # weights_only=False is explicit because these checkpoints hold an
         # optimizer state dict, not just tensors. torch 2.6 flips this default
         # to True, which would reject them; only load checkpoints you trust.
-        ckpt = torch.load(ckpt_path, weights_only=False)
+        ckpt = torch.load(ckpt_path, weights_only=False)  # 加载 torch.save 保存的字典（序列化的模型相关参数）
 
         start = ckpt['global_step']
         optimizer.load_state_dict(ckpt['optimizer_state_dict'])
