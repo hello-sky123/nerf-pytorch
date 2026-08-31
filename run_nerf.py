@@ -223,7 +223,7 @@ def create_nerf(args):
         ckpt_paths = [args.ft_path]
     else:
         ckpt_paths = [os.path.join(base_dir, exp_name, f) for f in sorted(
-            os.listdir(os.path.join(base_dir, exp_name))) if 'tar' in f]
+            os.listdir(os.path.join(base_dir, exp_name))) if f.endswith('.tar')]
 
     print('Found ckpts', ckpt_paths)
     if len(ckpt_paths) > 0 and not args.no_reload:
