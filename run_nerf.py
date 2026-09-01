@@ -368,15 +368,15 @@ def render_rays(ray_batch,
 
     t_vals = torch.linspace(0., 1., steps=n_samples)
     if not lin_disp:
-        z_vals = near * (1. - t_vals) + far * (t_vals)
+        z_vals = near * (1. - t_vals) + far * t_vals
     else:
-        z_vals = 1. / (1. / near * (1. - t_vals) + 1. / far * (t_vals))
+        z_vals = 1. / (1. / near * (1. - t_vals) + 1. / far * t_vals)
 
     z_vals = z_vals.expand([N_rays, n_samples])
 
     if perturb > 0.:
         # get intervals between samples
-        mids = .5 * (z_vals[..., 1:] + z_vals[..., :-1])
+        mids = 0.5 * (z_vals[..., 1:] + z_vals[..., :-1])
         upper = torch.cat([mids, z_vals[..., -1:]], -1)
         lower = torch.cat([z_vals[..., :1], mids], -1)
         # stratified samples in those intervals
@@ -565,7 +565,7 @@ def train():
     K = None
     if args.dataset_type == 'llff':
         images, poses, bds, render_poses, i_test = load_llff_data(args.data_dir, args.factor,
-                                                                  recenter=True, bd_factor=.75,
+                                                                  recenter=True, bd_factor=0.75,
                                                                   spherify=args.spherify)
         hwf = poses[0, :3, -1]
         poses = poses[:, :3, :4]
@@ -583,7 +583,7 @@ def train():
 
         print('DEFINING BOUNDS')
         if args.no_ndc:
-            near = np.ndarray.min(bds) * .9
+            near = np.ndarray.min(bds) * 0.9
             far = np.ndarray.max(bds) * 1.
 
         else:
@@ -705,7 +705,7 @@ def train():
 
             return
 
-    # Prepare raybatch tensor if batching random rays
+    # Prepare ray batch tensor if batching random rays
     n_rand = args.n_rand
     use_batching = not args.no_batching
     if use_batching:
@@ -748,7 +748,7 @@ def train():
         # Sample random ray batch
         if use_batching:
             # Random over all images
-            batch = rays_rgb[i_batch:i_batch + n_rand]  # [B, 2+1, 3*?]
+            batch = rays_rgb[i_batch:i_batch + n_rand]
             batch = torch.transpose(batch, 0, 1)
             batch_rays, target_s = batch[:2], batch[2]
 
