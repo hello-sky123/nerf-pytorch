@@ -229,10 +229,7 @@ def create_nerf(args):
     if len(ckpt_paths) > 0 and not args.no_reload:
         ckpt_path = ckpt_paths[-1]
         print('Reloading from', ckpt_path)
-        # weights_only=False is explicit because these checkpoints hold an
-        # optimizer state dict, not just tensors. torch 2.6 flips this default
-        # to True, which would reject them; only load checkpoints you trust.
-        ckpt = torch.load(ckpt_path, weights_only=False)  # 加载 torch.save 保存的字典（序列化的模型相关参数）
+        ckpt = torch.load(ckpt_path, weights_only=True)  # 加载 torch.save 保存的字典（序列化的模型相关参数）
 
         start = ckpt['global_step']
         optimizer.load_state_dict(ckpt['optimizer_state_dict'])
