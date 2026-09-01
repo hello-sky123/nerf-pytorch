@@ -241,6 +241,7 @@ def create_nerf(args):
 
     ##########################
 
+    # 训练时的前向传播过程就是体渲染，将渲染过程中不变的参数（如网络结构、采样点数、是否使用视角方向等）打包成字典，方便后续调用
     render_kwargs_train = {
         'network_query_fn': network_query_fn,
         'perturb': args.perturb,
@@ -682,6 +683,7 @@ def train():
     # Short circuit if only rendering out from trained model
     if args.render_only:
         print('RENDER ONLY')
+        # 仅渲染（推理时），不需要记录梯度信息
         with torch.no_grad():
             if args.render_test:
                 # render_test switches to test poses
@@ -759,7 +761,7 @@ def train():
 
         else:
             # Random from one image
-            img_i = np.random.choice(i_train)
+            img_i = np.random.choice(i_train)  # 从训练集的图像中随机选择一张图像
             target = images[img_i]
             target = torch.Tensor(target).to(device)
             pose = poses[img_i, :3, :4]
@@ -767,6 +769,7 @@ def train():
             if n_rand is not None:
                 rays_o, rays_d = get_rays(H, W, K, torch.Tensor(pose))  # (H, W, 3), (H, W, 3)
 
+                # 控制训练最初若干次迭代只从图像中心区域采样光线，之后才放开到全图（blender 合成数据的物体只占画面一小部分，周围全是空背景）
                 if i < args.pre_crop_iters:
                     dH = int(H // 2 * args.pre_crop_frac)
                     dW = int(W // 2 * args.pre_crop_frac)
@@ -786,8 +789,10 @@ def train():
                                        indexing='ij'), -1)  # (H, W, 2)
 
                 coords = torch.reshape(coords, [-1, 2])  # (H * W, 2)
+                # 随机选择 n_rand 个像素点的坐标（不可重复选择）
                 select_indices = np.random.choice(
                     coords.shape[0], size=[n_rand], replace=False)  # (n_rand,)
+                # coords 是 float32 类型的，需要转换为 long 类型才能作为索引使用
                 select_coords = coords[select_indices].long()  # (n_rand, 2)
                 rays_o = rays_o[select_coords[:, 0], select_coords[:, 1]]  # (n_rand, 3)
                 rays_d = rays_d[select_coords[:, 0], select_coords[:, 1]]  # (n_rand, 3)

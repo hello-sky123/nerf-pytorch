@@ -166,16 +166,19 @@ class NeRF(nn.Module):
         self.alpha_linear.bias.data = torch.from_numpy(np.transpose(weights[idx_alpha_linear + 1]))
 
 
-# Ray helpers
+# 获取光线，模拟真实相机的光学原理，从相机的中心出发，穿过照片上的每一个像素，向三维世界发射几十万条虚拟射线
 def get_rays(H, W, K, c2w):
+    # 生成尺寸为 W 行 H 列的二维网格，indexing='ij' 表示第一个输入沿输出的第 0 维变化，第二个输入沿第 1 维变化
     i, j = torch.meshgrid(torch.linspace(0, W - 1, W), torch.linspace(0, H - 1, H),
                           indexing='ij')  # PyTorch's meshgrid has indexing='ij'
     i = i.t()
     j = j.t()
+    # 求各像素的归一化坐标，OpenGL的坐标系是右手坐标系，x 轴向右，y 轴向上，z 轴朝后
     dirs = torch.stack([(i - K[0][2]) / K[0][0], -(j - K[1][2]) /
                        K[1][1], -torch.ones_like(i)], -1)
     # Rotate ray directions from camera frame to the world frame
     # dot product, equals to: [c2w.dot(dir) for dir in dirs]
+    # 广播 (H, W, 1, 3) * (3, 3) -> (H, W, 3, 3)，再沿最后一维求和得 (H, W, 3)
     rays_d = torch.sum(dirs[..., np.newaxis, :] * c2w[:3, :3], -1)
     # Translate camera frame's origin to the world frame. It is the origin of all rays.
     rays_o = c2w[:3, -1].expand(rays_d.shape)
