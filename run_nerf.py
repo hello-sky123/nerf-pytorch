@@ -692,7 +692,7 @@ def train():
                 # Default is smoother render_poses path
                 images = None
 
-            test_save_dir = os.path.join(base_dir, exp_name, 'renderonly_{}_{:06d}'.format(
+            test_save_dir = os.path.join(base_dir, exp_name, 'render_only_{}_{:06d}'.format(
                 'test' if args.render_test else 'path', start))
             os.makedirs(test_save_dir, exist_ok=True)
             print('test poses shape', render_poses.shape)
@@ -853,7 +853,7 @@ def train():
                              to8b(disps / np.max(disps)), fps=30, quality=8)
 
         if i % args.testset_interval == 0 and i > 0:
-            test_save_dir = os.path.join(base_dir, exp_name, 'testset_{:06d}'.format(i))
+            test_save_dir = os.path.join(base_dir, exp_name, 'test_set_{:06d}'.format(i))
             os.makedirs(test_save_dir, exist_ok=True)
             print('test poses shape', poses[i_test].shape)
             with torch.no_grad():
