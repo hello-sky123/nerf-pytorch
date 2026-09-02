@@ -137,8 +137,8 @@ def render(H, W, K, chunk=1024 * 32, rays=None, c2w=None, ndc=True,
     return ret_list + [ret_dict]
 
 
-def render_path(render_poses, hwf, K, chunk, render_kwargs, gt_imgs=None, save_dir=None,
-                render_factor=0):
+def render_path(render_poses: torch.Tensor, hwf, K, chunk, render_kwargs, gt_imgs=None,
+                save_dir=None, render_factor=0):
 
     H, W, focal = hwf
 
