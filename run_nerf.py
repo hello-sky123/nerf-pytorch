@@ -161,12 +161,6 @@ def render_path(render_poses, hwf, K, chunk, render_kwargs, gt_imgs=None, save_d
         if i == 0:
             print(rgb.shape, disp.shape)
 
-        """
-        if gt_imgs is not None and render_factor==0:
-            p = -10. * np.log10(np.mean(np.square(rgb.cpu().numpy() - gt_imgs[i])))
-            print(p)
-        """
-
         if save_dir is not None:
             rgb8 = to8b(rgbs[-1])
             filename = os.path.join(save_dir, f'{i:03d}.png')
@@ -744,7 +738,6 @@ def train():
 
     start = start + 1
     for i in trange(start, n_iters):
-        time0 = time.time()
 
         # Sample random ray batch
         if use_batching:
@@ -806,14 +799,12 @@ def train():
 
         optimizer.zero_grad()
         img_loss = img2mse(rgb, target_s)
-        trans = extras['raw'][..., -1]
         loss = img_loss
         psnr = mse2psnr(img_loss)
 
         if 'rgb0' in extras:
             img_loss0 = img2mse(extras['rgb0'], target_s)
             loss = loss + img_loss0
-            psnr0 = mse2psnr(img_loss0)
 
         loss.backward()
         optimizer.step()
@@ -827,7 +818,6 @@ def train():
             param_group['lr'] = new_learning_rate
         ################################
 
-        dt = time.time() - time0
         # print(f"Step: {global_step}, Loss: {loss}, Time: {dt}")
         # -----           end            -----
 
