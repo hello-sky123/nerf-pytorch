@@ -767,38 +767,37 @@ def train():
             target = torch.Tensor(target).to(device)
             pose = poses[img_i, :3, :4]
 
-            if n_rand is not None:
-                rays_o, rays_d = get_rays(H, W, K, torch.Tensor(pose))  # (H, W, 3), (H, W, 3)
+            rays_o, rays_d = get_rays(H, W, K, torch.Tensor(pose))  # (H, W, 3), (H, W, 3)
 
-                # 控制训练最初若干次迭代只从图像中心区域采样光线，之后才放开到全图（blender 合成数据的物体只占画面一小部分，周围全是空背景）
-                if i < args.pre_crop_iters:
-                    dH = int(H // 2 * args.pre_crop_frac)
-                    dW = int(W // 2 * args.pre_crop_frac)
-                    coords = torch.stack(
-                        torch.meshgrid(
-                            torch.linspace(H // 2 - dH, H // 2 + dH - 1, 2 * dH),
-                            torch.linspace(W // 2 - dW, W // 2 + dW - 1, 2 * dW),
-                            indexing='ij'
-                        ), -1)
-                    if i == start:
-                        print(f"[Config] Center cropping of size {2 * dH} x {2 * dW} "
-                              f"is enabled until iter {args.pre_crop_iters}")
-                else:
-                    coords = torch.stack(
-                        torch.meshgrid(torch.linspace(0, H - 1, H),
-                                       torch.linspace(0, W - 1, W),
-                                       indexing='ij'), -1)  # (H, W, 2)
+            # 控制训练最初若干次迭代只从图像中心区域采样光线，之后才放开到全图（blender 合成数据的物体只占画面一小部分，周围全是空背景）
+            if i < args.pre_crop_iters:
+                dH = int(H // 2 * args.pre_crop_frac)
+                dW = int(W // 2 * args.pre_crop_frac)
+                coords = torch.stack(
+                    torch.meshgrid(
+                        torch.linspace(H // 2 - dH, H // 2 + dH - 1, 2 * dH),
+                        torch.linspace(W // 2 - dW, W // 2 + dW - 1, 2 * dW),
+                        indexing='ij'
+                    ), -1)
+                if i == start:
+                    print(f"[Config] Center cropping of size {2 * dH} x {2 * dW} "
+                          f"is enabled until iter {args.pre_crop_iters}")
+            else:
+                coords = torch.stack(
+                    torch.meshgrid(torch.linspace(0, H - 1, H),
+                                   torch.linspace(0, W - 1, W),
+                                   indexing='ij'), -1)  # (H, W, 2)
 
-                coords = torch.reshape(coords, [-1, 2])  # (H * W, 2)
-                # 随机选择 n_rand 个像素点的坐标（不可重复选择）
-                select_indices = np.random.choice(
-                    coords.shape[0], size=[n_rand], replace=False)  # (n_rand,)
-                # coords 是 float32 类型的，需要转换为 long 类型才能作为索引使用
-                select_coords = coords[select_indices].long()  # (n_rand, 2)
-                rays_o = rays_o[select_coords[:, 0], select_coords[:, 1]]  # (n_rand, 3)
-                rays_d = rays_d[select_coords[:, 0], select_coords[:, 1]]  # (n_rand, 3)
-                batch_rays = torch.stack([rays_o, rays_d], 0)
-                target_s = target[select_coords[:, 0], select_coords[:, 1]]  # (n_rand, 3)
+            coords = torch.reshape(coords, [-1, 2])  # (H * W, 2)
+            # 随机选择 n_rand 个像素点的坐标（不可重复选择）
+            select_indices = np.random.choice(
+                coords.shape[0], size=[n_rand], replace=False)  # (n_rand,)
+            # coords 是 float32 类型的，需要转换为 long 类型才能作为索引使用
+            select_coords = coords[select_indices].long()  # (n_rand, 2)
+            rays_o = rays_o[select_coords[:, 0], select_coords[:, 1]]  # (n_rand, 3)
+            rays_d = rays_d[select_coords[:, 0], select_coords[:, 1]]  # (n_rand, 3)
+            batch_rays = torch.stack([rays_o, rays_d], 0)
+            target_s = target[select_coords[:, 0], select_coords[:, 1]]  # (n_rand, 3)
 
         # ----- Core optimization loop -----
         rgb, disp, acc, extras = render(H, W, K, chunk=args.chunk, rays=batch_rays,
