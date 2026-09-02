@@ -64,9 +64,9 @@ def load_blender_data(base_dir, half_res=False, test_skip=1):
         for frame in meta['frames'][::skip]:
             f_name = os.path.join(base_dir, frame['file_path'] + '.png')
             imgs.append(imageio.imread(f_name))
-            poses.append(np.array(frame['transform_matrix']))
-        imgs = (np.array(imgs) / 255.).astype(np.float32)  # keep all 4 channels (RGBA)
-        poses = np.array(poses).astype(np.float32)
+            poses.append(np.array(frame['transform_matrix'], dtype=np.float32))
+        imgs = np.array(imgs, dtype=np.float32) / 255.  # keep all 4 channels (RGBA)
+        poses = np.array(poses)
         counts.append(counts[-1] + imgs.shape[0])
         all_imgs.append(imgs)
         all_poses.append(poses)
