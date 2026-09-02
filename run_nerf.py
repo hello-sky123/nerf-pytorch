@@ -856,8 +856,7 @@ def train():
 
 
 if __name__ == '__main__':
-    # Replaces the deprecated torch.set_default_tensor_type('torch.cuda.FloatTensor').
-    # Unlike the old call this also degrades gracefully to CPU when no GPU is present.
+
     torch.set_default_dtype(torch.float32)
     torch.set_default_device(device)
 
