@@ -754,7 +754,7 @@ def train():
             target = torch.tensor(target, dtype=torch.float32, device=device)
             pose = poses[img_i, :3, :4]
 
-            rays_o, rays_d = get_rays(H, W, K, torch.Tensor(pose))  # (H, W, 3), (H, W, 3)
+            rays_o, rays_d = get_rays(H, W, K, pose)  # (H, W, 3), (H, W, 3)
 
             # 控制训练最初若干次迭代只从图像中心区域采样光线，之后才放开到全图（blender 合成数据的物体只占画面一小部分，周围全是空背景）
             if i < args.pre_crop_iters:
@@ -841,7 +841,7 @@ def train():
             os.makedirs(test_save_dir, exist_ok=True)
             print('test poses shape', poses[i_test].shape)
             with torch.no_grad():
-                render_path(torch.Tensor(poses[i_test]).to(device), hwf, K, args.chunk,
+                render_path(poses[i_test], hwf, K, args.chunk,
                             render_kwargs_test, gt_imgs=images[i_test],
                             save_dir=test_save_dir)
             print('Saved test set')
