@@ -103,9 +103,9 @@ def render(H, W, K, chunk=1024 * 32, rays=None, c2w=None, ndc=True,
         # use provided ray batch
         rays_o, rays_d = rays
 
+    # provide ray directions as input
+    view_dirs = rays_d
     if use_view_dirs:
-        # provide ray directions as input
-        view_dirs = rays_d
         if c2w_static_cam is not None:
             # special case to visualize effect of view_dirs
             rays_o, rays_d = get_rays(H, W, K, c2w_static_cam)
