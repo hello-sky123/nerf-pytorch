@@ -733,9 +733,6 @@ def train():
     print('TEST views are', i_test)
     print('VAL views are', i_val)
 
-    # Summary writers
-    # writer = SummaryWriter(os.path.join(base_dir, 'summaries', exp_name))
-
     start = start + 1
     for i in trange(start, n_iters):
 
