@@ -51,7 +51,7 @@ def load_dv_data(scene='cube', base_dir='/data/deepvoxels', test_skip=8):
 
     H = 512
     W = 512
-    deepvoxels_base = '{}/train/{}/'.format(base_dir, scene)
+    deepvoxels_base = f'{base_dir}/train/{scene}/'
 
     full_intrinsic, grid_barycenter, scale, near_plane, world2cam_poses = parse_intrinsics(
         os.path.join(deepvoxels_base, 'intrinsics.txt'), H)
@@ -74,9 +74,9 @@ def load_dv_data(scene='cube', base_dir='/data/deepvoxels', test_skip=8):
 
     posedir = os.path.join(deepvoxels_base, 'pose')
     poses = dir2poses(posedir)
-    testposes = dir2poses('{}/test/{}/pose'.format(base_dir, scene))
+    testposes = dir2poses(f'{base_dir}/test/{scene}/pose')
     testposes = testposes[::test_skip]
-    valposes = dir2poses('{}/validation/{}/pose'.format(base_dir, scene))
+    valposes = dir2poses(f'{base_dir}/validation/{scene}/pose')
     valposes = valposes[::test_skip]
 
     imgfiles = [f for f in sorted(os.listdir(os.path.join(deepvoxels_base, 'rgb')))
@@ -84,12 +84,12 @@ def load_dv_data(scene='cube', base_dir='/data/deepvoxels', test_skip=8):
     imgs = np.stack([imageio.imread(os.path.join(deepvoxels_base, 'rgb', f)) / 255.
                      for f in imgfiles], 0).astype(np.float32)
 
-    testimgd = '{}/test/{}/rgb'.format(base_dir, scene)
+    testimgd = f'{base_dir}/test/{scene}/rgb'
     imgfiles = [f for f in sorted(os.listdir(testimgd)) if f.endswith('png')]
     testimgs = np.stack([imageio.imread(os.path.join(testimgd, f)) / 255.
                          for f in imgfiles[::test_skip]], 0).astype(np.float32)
 
-    valimgd = '{}/validation/{}/rgb'.format(base_dir, scene)
+    valimgd = f'{base_dir}/validation/{scene}/rgb'
     imgfiles = [f for f in sorted(os.listdir(valimgd)) if f.endswith('png')]
     valimgs = np.stack([imageio.imread(os.path.join(valimgd, f)) / 255.
                         for f in imgfiles[::test_skip]], 0).astype(np.float32)

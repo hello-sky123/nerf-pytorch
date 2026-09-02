@@ -13,11 +13,11 @@ def _minify(base_dir, factors=None, resolutions=None):
     resolutions = [] if resolutions is None else resolutions
     needtoload = False
     for r in factors:
-        imgdir = os.path.join(base_dir, 'images_{}'.format(r))
+        imgdir = os.path.join(base_dir, f'images_{r}')
         if not os.path.exists(imgdir):
             needtoload = True
     for r in resolutions:
-        imgdir = os.path.join(base_dir, 'images_{}x{}'.format(r[1], r[0]))
+        imgdir = os.path.join(base_dir, f'images_{r[1]}x{r[0]}')
         if not os.path.exists(imgdir):
             needtoload = True
     if not needtoload:
@@ -31,10 +31,10 @@ def _minify(base_dir, factors=None, resolutions=None):
     # bare CalledProcessError exit status 127.
     if which('mogrify') is None:
         raise RuntimeError(
-            'ImageMagick (mogrify) is required to resize the LLFF images in {!r} '
+            f'ImageMagick (mogrify) is required to resize the LLFF images in {base_dir!r} '
             'but was not found. Either install it (e.g. `sudo apt install '
             'imagemagick`) or pre-create the resized image directory '
-            'yourself.'.format(base_dir))
+            'yourself.')
 
     imgdir = os.path.join(base_dir, 'images')
     imgs = [os.path.join(imgdir, f) for f in sorted(os.listdir(imgdir))]
@@ -46,11 +46,11 @@ def _minify(base_dir, factors=None, resolutions=None):
 
     for r in factors + resolutions:
         if isinstance(r, int):
-            name = 'images_{}'.format(r)
-            resizearg = '{}%'.format(100. / r)
+            name = f'images_{r}'
+            resizearg = f'{100. / r}%'
         else:
-            name = 'images_{}x{}'.format(r[1], r[0])
-            resizearg = '{}x{}'.format(r[1], r[0])
+            name = f'images_{r[1]}x{r[0]}'
+            resizearg = f'{r[1]}x{r[0]}'
         imgdir = os.path.join(base_dir, name)
         if os.path.exists(imgdir):
             continue
@@ -58,17 +58,17 @@ def _minify(base_dir, factors=None, resolutions=None):
         print('Minifying', r, base_dir)
 
         os.makedirs(imgdir)
-        check_output('cp {}/* {}'.format(imgdir_orig, imgdir), shell=True)
+        check_output(f'cp {imgdir_orig}/* {imgdir}', shell=True)
 
         ext = imgs[0].split('.')[-1]
-        args = ' '.join(['mogrify', '-resize', resizearg, '-format', 'png', '*.{}'.format(ext)])
+        args = ' '.join(['mogrify', '-resize', resizearg, '-format', 'png', f'*.{ext}'])
         print(args)
         os.chdir(imgdir)
         check_output(args, shell=True)
         os.chdir(wd)
 
         if ext != 'png':
-            check_output('rm {}/*.{}'.format(imgdir, ext), shell=True)
+            check_output(f'rm {imgdir}/*.{ext}', shell=True)
             print('Removed duplicates')
         print('Done')
 
@@ -87,19 +87,19 @@ def _load_data(base_dir, factor=None, width=None, height=None, load_imgs=True):
     sfx = ''
 
     if factor is not None:
-        sfx = '_{}'.format(factor)
+        sfx = f'_{factor}'
         _minify(base_dir, factors=[factor])
         factor = factor
     elif height is not None:
         factor = sh[0] / float(height)
         width = int(sh[1] / factor)
         _minify(base_dir, resolutions=[[height, width]])
-        sfx = '_{}x{}'.format(width, height)
+        sfx = f'_{width}x{height}'
     elif width is not None:
         factor = sh[1] / float(width)
         height = int(sh[0] / factor)
         _minify(base_dir, resolutions=[[height, width]])
-        sfx = '_{}x{}'.format(width, height)
+        sfx = f'_{width}x{height}'
     else:
         factor = 1
 
@@ -111,7 +111,7 @@ def _load_data(base_dir, factor=None, width=None, height=None, load_imgs=True):
     imgfiles = [os.path.join(imgdir, f) for f in sorted(os.listdir(imgdir))
                 if f.endswith('JPG') or f.endswith('jpg') or f.endswith('png')]
     if poses.shape[-1] != len(imgfiles):
-        print('Mismatch between imgs {} and poses {} !!!!'.format(len(imgfiles), poses.shape[-1]))
+        print(f'Mismatch between imgs {len(imgfiles)} and poses {poses.shape[-1]} !!!!')
         return
 
     sh = imageio.imread(imgfiles[0]).shape

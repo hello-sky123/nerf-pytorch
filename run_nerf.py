@@ -169,7 +169,7 @@ def render_path(render_poses, hwf, K, chunk, render_kwargs, gt_imgs=None, save_d
 
         if save_dir is not None:
             rgb8 = to8b(rgbs[-1])
-            filename = os.path.join(save_dir, '{:03d}.png'.format(i))
+            filename = os.path.join(save_dir, f'{i:03d}.png')
             imageio.imwrite(filename, rgb8)
 
     rgbs = np.stack(rgbs, 0)
@@ -660,7 +660,7 @@ def train():
     with open(f, 'w') as file:
         for arg in sorted(vars(args)):  # vars 将对象转为字典，sorted 排序
             attr = getattr(args, arg)
-            file.write('{} = {}\n'.format(arg, attr))
+            file.write(f'{arg} = {attr}\n')
     if args.config is not None:
         f = os.path.join(base_dir, exp_name, 'config.txt')
         with open(f, 'w') as file:
@@ -692,8 +692,9 @@ def train():
                 # Default is smoother render_poses path
                 images = None
 
-            test_save_dir = os.path.join(base_dir, exp_name, 'render_only_{}_{:06d}'.format(
-                'test' if args.render_test else 'path', start))
+            which = 'test' if args.render_test else 'path'
+            test_save_dir = os.path.join(base_dir, exp_name,
+                                         f'render_only_{which}_{start:06d}')
             os.makedirs(test_save_dir, exist_ok=True)
             print('test poses shape', render_poses.shape)
 
@@ -833,7 +834,7 @@ def train():
 
         # Rest is logging
         if i % args.weights_interval == 0:
-            path = os.path.join(base_dir, exp_name, '{:06d}.tar'.format(i))
+            path = os.path.join(base_dir, exp_name, f'{i:06d}.tar')
             torch.save({
                 'global_step': global_step,
                 'network_fn_state_dict': render_kwargs_train['network_fn'].state_dict(),
@@ -847,13 +848,13 @@ def train():
             with torch.no_grad():
                 rgbs, disps = render_path(render_poses, hwf, K, args.chunk, render_kwargs_test)
             print('Done, saving', rgbs.shape, disps.shape)
-            movie_base = os.path.join(base_dir, exp_name, '{}_spiral_{:06d}_'.format(exp_name, i))
+            movie_base = os.path.join(base_dir, exp_name, f'{exp_name}_spiral_{i:06d}_')
             imageio.mimwrite(movie_base + 'rgb.mp4', to8b(rgbs), fps=30, quality=8)
             imageio.mimwrite(movie_base + 'disp.mp4',
                              to8b(disps / np.max(disps)), fps=30, quality=8)
 
         if i % args.testset_interval == 0 and i > 0:
-            test_save_dir = os.path.join(base_dir, exp_name, 'test_set_{:06d}'.format(i))
+            test_save_dir = os.path.join(base_dir, exp_name, f'test_set_{i:06d}')
             os.makedirs(test_save_dir, exist_ok=True)
             print('test poses shape', poses[i_test].shape)
             with torch.no_grad():

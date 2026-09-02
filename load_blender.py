@@ -40,7 +40,7 @@ def load_blender_data(base_dir, half_res=False, test_skip=1):
     splits = ['train', 'val', 'test']
     metas = {}
     for s in splits:
-        with open(os.path.join(base_dir, 'transforms_{}.json'.format(s)), 'r') as fp:
+        with open(os.path.join(base_dir, f'transforms_{s}.json'), 'r') as fp:
             metas[s] = json.load(fp)  # 将读取到的巨型字典存入 metas
 
     all_imgs = []
