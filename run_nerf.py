@@ -1,5 +1,6 @@
 import os
 import time
+from typing import Any
 
 import configargparse
 import imageio.v2 as imageio
@@ -236,7 +237,7 @@ def create_nerf(args):
     ##########################
 
     # 训练时的前向传播过程就是体渲染，将渲染过程中不变的参数（如网络结构、采样点数、是否使用视角方向等）打包成字典，方便后续调用
-    render_kwargs_train = {
+    render_kwargs_train: dict[str, Any] = {
         'network_query_fn': network_query_fn,
         'perturb': args.perturb,
         'n_importance': args.n_importance,
