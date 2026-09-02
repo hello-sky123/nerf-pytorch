@@ -12,7 +12,7 @@ def trans_t(t):
         [1, 0, 0, 0],
         [0, 1, 0, 0],
         [0, 0, 1, t],
-        [0, 0, 0, 1]]).float()
+        [0, 0, 0, 1]], dtype=torch.float32)
 
 
 def rot_phi(phi):
@@ -20,7 +20,7 @@ def rot_phi(phi):
         [1, 0, 0, 0],
         [0, np.cos(phi), -np.sin(phi), 0],
         [0, np.sin(phi), np.cos(phi), 0],
-        [0, 0, 0, 1]]).float()
+        [0, 0, 0, 1]], dtype=torch.float32)
 
 
 def rot_theta(th):
@@ -28,7 +28,7 @@ def rot_theta(th):
         [np.cos(th), 0, -np.sin(th), 0],
         [0, 1, 0, 0],
         [np.sin(th), 0, np.cos(th), 0],
-        [0, 0, 0, 1]]).float()
+        [0, 0, 0, 1]], dtype=torch.float32)
 
 
 def pose_spherical(theta, phi, radius):
