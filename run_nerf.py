@@ -583,8 +583,8 @@ def train():
 
         print('DEFINING BOUNDS')
         if args.no_ndc:
-            near = np.ndarray.min(bds) * 0.9
-            far = np.ndarray.max(bds) * 1.
+            near = float(np.ndarray.min(bds) * 0.9)
+            far = float(np.ndarray.max(bds) * 1.)
 
         else:
             near = 0.
