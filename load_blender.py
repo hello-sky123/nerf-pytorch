@@ -47,11 +47,11 @@ def load_blender_data(base_dir, half_res=False, test_skip=1):
     metas = {}
     for s in splits:
         with open(os.path.join(base_dir, f'transforms_{s}.json'), 'r') as fp:
-            metas[s] = json.load(fp)  # 将读取到的巨型字典存入 metas
+            metas[s] = json.load(fp)  # 读取 JSON 文本，解析 JSON，将其转换为 Python 对象（各数据类型一一映射过来
 
     all_imgs = []
     all_poses = []
-    counts = [0]
+    counts = [0]  # 累计帧数
     for s in splits:
         meta = metas[s]
         imgs = []
@@ -61,9 +61,11 @@ def load_blender_data(base_dir, half_res=False, test_skip=1):
         else:
             skip = test_skip
 
+        # 隔 skip 帧读取图像和位姿
         for frame in meta['frames'][::skip]:
             f_name = os.path.join(base_dir, frame['file_path'] + '.png')
-            imgs.append(imageio.imread(f_name))
+            imgs.append(imageio.imread(f_name))  # 读图，uint8 类型的 ndarray, [H, W, 4]
+            # 读位姿，float32 类型的 ndarray, [4, 4]
             poses.append(np.array(frame['transform_matrix'], dtype=np.float32))
         imgs = np.array(imgs, dtype=np.float32) / 255.  # keep all 4 channels (RGBA)
         poses = np.array(poses)
