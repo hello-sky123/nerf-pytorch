@@ -702,6 +702,8 @@ def train():
     # Prepare ray batch tensor if batching random rays
     n_rand = args.n_rand
     use_batching = not args.no_batching
+    i_batch = 0
+    rays_rgb = torch.empty(0, 3, 3)
     if use_batching:
         # For random ray batching
         print('get rays')
@@ -717,14 +719,10 @@ def train():
         np.random.shuffle(rays_rgb)
 
         print('done')
-        i_batch = 0
-
-    # Move training data to GPU
-    if use_batching:
-        images = torch.Tensor(images).to(device)
-    poses = torch.Tensor(poses).to(device)
-    if use_batching:
         rays_rgb = torch.Tensor(rays_rgb).to(device)
+        images = torch.Tensor(images).to(device)
+
+    poses = torch.Tensor(poses).to(device)
 
     n_iters = 200000 + 1
     print('Begin')
@@ -738,7 +736,7 @@ def train():
         # Sample random ray batch
         if use_batching:
             # Random over all images
-            batch = rays_rgb[i_batch:i_batch + n_rand]
+            batch = rays_rgb[i_batch: i_batch + n_rand]
             batch = torch.transpose(batch, 0, 1)
             batch_rays, target_s = batch[:2], batch[2]
 
