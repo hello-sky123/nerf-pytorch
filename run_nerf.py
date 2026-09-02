@@ -17,7 +17,7 @@ from run_nerf_helpers import (NeRF, get_embedder, get_rays, get_rays_np, img2mse
                               ndc_rays, sample_pdf, to8b)
 
 
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+device = torch.accelerator.current_accelerator()
 np.random.seed(0)
 DEBUG = False
 
