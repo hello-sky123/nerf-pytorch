@@ -394,14 +394,15 @@ def render_rays(ray_batch,
     rgb_map, disp_map, acc_map, weights, depth_map = raw2outputs(
         raw, z_vals, rays_d, raw_noise_std, white_bkgd, pytest=pytest)
 
+    ret: dict[str, torch.Tensor] = {}
     if n_importance > 0:
-
-        rgb_map_0, disp_map_0, acc_map_0 = rgb_map, disp_map, acc_map
+        ret['rgb0'], ret['disp0'], ret['acc0'] = rgb_map, disp_map, acc_map
 
         z_vals_mid = .5 * (z_vals[..., 1:] + z_vals[..., :-1])
         z_samples = sample_pdf(
             z_vals_mid, weights[..., 1:-1], n_importance, det=(perturb == 0.), pytest=pytest)
         z_samples = z_samples.detach()
+        ret['z_std'] = torch.std(z_samples, dim=-1, unbiased=False)  # [N_rays]
 
         z_vals, _ = torch.sort(torch.cat([z_vals, z_samples], -1), -1)
         pts = rays_o[..., None, :] + rays_d[..., None, :] * \
@@ -414,14 +415,11 @@ def render_rays(ray_batch,
         rgb_map, disp_map, acc_map, weights, depth_map = raw2outputs(
             raw, z_vals, rays_d, raw_noise_std, white_bkgd, pytest=pytest)
 
-    ret = {'rgb_map': rgb_map, 'disp_map': disp_map, 'acc_map': acc_map}
+    ret['rgb_map'] = rgb_map
+    ret['disp_map'] = disp_map
+    ret['acc_map'] = acc_map
     if ret_raw:
         ret['raw'] = raw
-    if n_importance > 0:
-        ret['rgb0'] = rgb_map_0
-        ret['disp0'] = disp_map_0
-        ret['acc0'] = acc_map_0
-        ret['z_std'] = torch.std(z_samples, dim=-1, unbiased=False)  # [N_rays]
 
     for k in ret:
         if (torch.isnan(ret[k]).any() or torch.isinf(ret[k]).any()) and DEBUG:
