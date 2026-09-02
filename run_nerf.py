@@ -430,9 +430,9 @@ def render_rays(ray_batch,
 
 def config_parser():
 
-    # 创建一个参数解析器对象
+    # 创建一个参数解析器对象，比 argparse 更强大，支持从 txt 文本配置文件中读取参数
     parser = configargparse.ArgumentParser()
-    # 添加一个命令行参数 --config，用于指定配置文件的路径
+    # 添加一个命令行参数 --config，用于指定配置文件的路径，优先级顺序为： 命令行显式指定 > 配置文件中的值 > 代码中的 default
     parser.add_argument('--config', is_config_file=True,
                         help='config file path')
     parser.add_argument("--exp_name", type=str,
@@ -463,7 +463,7 @@ def config_parser():
     parser.add_argument("--net_chunk", type=int, default=1024 * 64,
                         help='number of pts sent through network in parallel, '
                              'decrease if running out of memory')
-    parser.add_argument("--no_batching", action='store_true',
+    parser.add_argument("--no_batching", action='store_true',  # 开关参数，出现即为 True，未出现即为 False
                         help='only take random rays from 1 image at a time')
     parser.add_argument("--no_reload", action='store_true',
                         help='do not reload weights from saved ckpt')
@@ -551,8 +551,8 @@ def config_parser():
 
 def train():
 
-    parser = config_parser()
-    args = parser.parse_args()  # 解析命令行配置参数
+    parser = config_parser()  # 只完成了参数注册，还没有读命令行，也没有读配置文件
+    args = parser.parse_args()  # 解析命令行参数、配置文件参数
 
     # Load data
     K = None
