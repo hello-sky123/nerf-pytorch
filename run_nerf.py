@@ -671,7 +671,7 @@ def train():
     render_kwargs_test.update(bds_dict)
 
     # Move testing data to GPU
-    render_poses = torch.Tensor(render_poses).to(device)
+    render_poses = torch.as_tensor(render_poses, dtype=torch.float32, device=device)
 
     # Short circuit if only rendering out from trained model
     if args.render_only:
@@ -719,10 +719,10 @@ def train():
         np.random.shuffle(rays_rgb)
 
         print('done')
-        rays_rgb = torch.Tensor(rays_rgb).to(device)
-        images = torch.Tensor(images).to(device)
+        rays_rgb = torch.tensor(rays_rgb, dtype=torch.float32, device=device)
+        images = torch.tensor(images, dtype=torch.float32, device=device)
 
-    poses = torch.Tensor(poses).to(device)
+    poses = torch.tensor(poses, dtype=torch.float32, device=device)
 
     n_iters = 200000 + 1
     print('Begin')
@@ -751,7 +751,7 @@ def train():
             # Random from one image
             img_i = np.random.choice(i_train)  # 从训练集的图像中随机选择一张图像
             target = images[img_i]
-            target = torch.Tensor(target).to(device)
+            target = torch.tensor(target, dtype=torch.float32, device=device)
             pose = poses[img_i, :3, :4]
 
             rays_o, rays_d = get_rays(H, W, K, torch.Tensor(pose))  # (H, W, 3), (H, W, 3)
