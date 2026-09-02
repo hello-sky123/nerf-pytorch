@@ -6,23 +6,29 @@ import imageio.v2 as imageio
 import numpy as np
 import torch
 
-trans_t = lambda t: torch.tensor([
-    [1., 0., 0., 0.],
-    [0., 1., 0., 0.],
-    [0., 0., 1., t],
-    [0., 0., 0., 1.]]).float()
 
-rot_phi = lambda phi: torch.tensor([
-    [1., 0., 0., 0.],
-    [0., np.cos(phi), -np.sin(phi), 0.],
-    [0., np.sin(phi), np.cos(phi), 0.],
-    [0., 0., 0., 1.]]).float()
+def trans_t(t):
+    return torch.tensor([
+        [1., 0., 0., 0.],
+        [0., 1., 0., 0.],
+        [0., 0., 1., t],
+        [0., 0., 0., 1.]]).float()
 
-rot_theta = lambda th: torch.tensor([
-    [np.cos(th), 0., -np.sin(th), 0.],
-    [0., 1., 0., 0.],
-    [np.sin(th), 0., np.cos(th), 0.],
-    [0., 0., 0., 1.]]).float()
+
+def rot_phi(phi):
+    return torch.tensor([
+        [1., 0., 0., 0.],
+        [0., np.cos(phi), -np.sin(phi), 0.],
+        [0., np.sin(phi), np.cos(phi), 0.],
+        [0., 0., 0., 1.]]).float()
+
+
+def rot_theta(th):
+    return torch.tensor([
+        [np.cos(th), 0., -np.sin(th), 0.],
+        [0., 1., 0., 0.],
+        [np.sin(th), 0., np.cos(th), 0.],
+        [0., 0., 0., 1.]]).float()
 
 
 def pose_spherical(theta, phi, radius):
@@ -78,7 +84,7 @@ def load_blender_data(base_dir, half_res=False, test_skip=1):
     focal = 0.5 * W / np.tan(0.5 * camera_angle_x)
 
     render_poses = torch.stack([pose_spherical(angle, -30.0, 4.0)
-                               for angle in np.linspace(-180, 180, 40 + 1)[:-1]], 0)
+                                for angle in np.linspace(-180, 180, 40 + 1)[:-1]], 0)
 
     if half_res:
         H = H // 2

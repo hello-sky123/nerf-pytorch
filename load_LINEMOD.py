@@ -7,23 +7,28 @@ import numpy as np
 import torch
 
 
-trans_t = lambda t: torch.tensor([
-    [1, 0, 0, 0],
-    [0, 1, 0, 0],
-    [0, 0, 1, t],
-    [0, 0, 0, 1]]).float()
+def trans_t(t):
+    return torch.tensor([
+        [1, 0, 0, 0],
+        [0, 1, 0, 0],
+        [0, 0, 1, t],
+        [0, 0, 0, 1]]).float()
 
-rot_phi = lambda phi: torch.tensor([
-    [1, 0, 0, 0],
-    [0, np.cos(phi), -np.sin(phi), 0],
-    [0, np.sin(phi), np.cos(phi), 0],
-    [0, 0, 0, 1]]).float()
 
-rot_theta = lambda th: torch.tensor([
-    [np.cos(th), 0, -np.sin(th), 0],
-    [0, 1, 0, 0],
-    [np.sin(th), 0, np.cos(th), 0],
-    [0, 0, 0, 1]]).float()
+def rot_phi(phi):
+    return torch.tensor([
+        [1, 0, 0, 0],
+        [0, np.cos(phi), -np.sin(phi), 0],
+        [0, np.sin(phi), np.cos(phi), 0],
+        [0, 0, 0, 1]]).float()
+
+
+def rot_theta(th):
+    return torch.tensor([
+        [np.cos(th), 0, -np.sin(th), 0],
+        [0, 1, 0, 0],
+        [np.sin(th), 0, np.cos(th), 0],
+        [0, 0, 0, 1]]).float()
 
 
 def pose_spherical(theta, phi, radius):
