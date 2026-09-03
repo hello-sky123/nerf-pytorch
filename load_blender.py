@@ -73,10 +73,10 @@ def load_blender_data(base_dir, half_res=False, test_skip=1):
         all_imgs.append(imgs)
         all_poses.append(poses)
 
-    # 将边界变成索引区间
+    # 将边界变成索引区间，为三个子集分别生成索引列表
     i_split = [np.arange(counts[i], counts[i + 1]) for i in range(3)]
 
-    imgs = np.concatenate(all_imgs, 0)  # 按第一维（三个集合）连接
+    imgs = np.concatenate(all_imgs, 0)  # 按元素的第一维连接，结果和列表中的元素维度相同
     poses = np.concatenate(all_poses, 0)
 
     H, W = imgs[0].shape[:2]
