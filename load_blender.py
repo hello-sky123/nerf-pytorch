@@ -93,9 +93,9 @@ def load_blender_data(base_dir, half_res=False, test_skip=1):
         W = W // 2
         focal = focal / 2.
 
-        imgs_half_res = np.zeros((imgs.shape[0], H, W, 4))
+        imgs_half_res = np.zeros((imgs.shape[0], H, W, 4), dtype=np.float32)
         for i, img in enumerate(imgs):
             imgs_half_res[i] = cv2.resize(img, (W, H), interpolation=cv2.INTER_AREA)
         imgs = imgs_half_res
 
-    return imgs, poses, render_poses, [H, W, focal], i_split
+    return imgs, poses, render_poses, (H, W, focal), i_split
