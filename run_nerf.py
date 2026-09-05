@@ -588,7 +588,7 @@ def train():
         images, poses, render_poses, hwf, i_split = load_blender_data(
             args.data_dir, args.half_res, args.test_skip)
         print('Loaded blender', images.shape, render_poses.shape, hwf, args.data_dir)
-        i_train, i_val, i_test = i_split
+        i_train, i_val, i_test = i_split  # 序列解包，数量必须严格匹配
 
         near = 2.
         far = 6.
@@ -651,7 +651,8 @@ def train():
     f = os.path.join(base_dir, exp_name, 'args.txt')
     # 把当前这次训练用到的所有参数以文本形式备份保存下来，以保证实验的“可重复性”
     with open(f, 'w') as file:
-        for arg in sorted(vars(args)):  # vars 将对象转为字典，sorted 排序
+        # args 是一个 Namespace 对象（通过属性访问的纯数据容器），vars 将对象转为字典，sorted 排序
+        for arg in sorted(vars(args)):
             attr = getattr(args, arg)
             file.write(f'{arg} = {attr}\n')
     if args.config is not None:
