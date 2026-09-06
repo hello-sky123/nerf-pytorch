@@ -190,6 +190,7 @@ def create_nerf(args):
     model = NeRF(D=args.net_depth, W=args.net_width,
                  input_ch=input_ch, skips=skips,
                  input_ch_views=input_ch_views, use_view_dirs=args.use_view_dirs).to(device)
+    # 把神经网络内部所有需要被训练的参数（也就是权重和偏置）全部提取出来，打包成一个列表，准备交给“优化器”去更新
     grad_vars = list(model.parameters())
 
     model_fine = None
