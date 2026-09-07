@@ -23,6 +23,11 @@ class Embedder:
         self.kwargs = kwargs
         self.create_embedding_fn()
 
+    # 把一对（周期函数，频率）各自绑进一个闭包，使其不共享循环变量
+    @staticmethod
+    def make_band_fn(p_fn, freq):
+        return lambda x: p_fn(x * freq)
+
     # 预先生成一堆处理函数
     def create_embedding_fn(self):
         embed_fns = []
@@ -42,7 +47,7 @@ class Embedder:
 
         for freq in freq_bands:
             for p_fn in self.kwargs['periodic_fns']:
-                embed_fns.append(lambda x, p_fn=p_fn, freq=freq: p_fn(x * freq))
+                embed_fns.append(self.make_band_fn(p_fn, freq))
                 out_dim += d
 
         self.embed_fns = embed_fns
