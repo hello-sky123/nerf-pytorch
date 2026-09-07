@@ -229,9 +229,9 @@ def sample_pdf(bins, weights, n_samples, det=False, pytest=False):
     cdf_g = torch.gather(cdf.unsqueeze(1).expand(matched_shape), 2, gather_indices)
     bins_g = torch.gather(bins.unsqueeze(1).expand(matched_shape), 2, gather_indices)
 
-    denom = (cdf_g[..., 1] - cdf_g[..., 0])
-    denom = torch.where(denom < 1e-5, torch.ones_like(denom), denom)
-    t = (u - cdf_g[..., 0]) / denom
+    den = (cdf_g[..., 1] - cdf_g[..., 0])
+    den = torch.where(den < 1e-5, torch.ones_like(den), den)
+    t = (u - cdf_g[..., 0]) / den
     samples = bins_g[..., 0] + t * (bins_g[..., 1] - bins_g[..., 0])
 
     return samples
