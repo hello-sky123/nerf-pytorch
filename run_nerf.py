@@ -179,10 +179,10 @@ def render_path(render_poses: torch.Tensor, hwf, K, chunk, render_kwargs, gt_img
 def create_nerf(args):
     """Instantiate NeRF's MLP model.
     """
-    # 组装“空间坐标”输入端
+    # 空间坐标位置编码函数和编码后的维度
     embed_fn, input_ch = get_embedder(args.multi_res, args.embed_type)
 
-    # 组装“视角方向”输入端
+    # 视角方向编码函数和编码后的维度
     input_ch_views = 0
     embed_dirs_fn = None
     if args.use_view_dirs:
