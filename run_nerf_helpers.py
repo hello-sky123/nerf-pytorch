@@ -220,14 +220,14 @@ def sample_pdf(bins, weights, n_samples, det=False, pytest=False):
 
     # Invert CDF
     u = u.contiguous()
-    inds = torch.searchsorted(cdf, u, right=True)
-    below = torch.max(torch.zeros_like(inds - 1), inds - 1)
-    above = torch.min((cdf.shape[-1] - 1) * torch.ones_like(inds), inds)
-    inds_g = torch.stack([below, above], -1)  # (batch, n_samples, 2)
+    indices = torch.searchsorted(cdf, u, right=True)
+    below = torch.max(torch.zeros_like(indices - 1), indices - 1)
+    above = torch.min((cdf.shape[-1] - 1) * torch.ones_like(indices), indices)
+    gather_indices = torch.stack([below, above], -1)  # (batch, n_samples, 2)
 
-    matched_shape = [inds_g.shape[0], inds_g.shape[1], cdf.shape[-1]]
-    cdf_g = torch.gather(cdf.unsqueeze(1).expand(matched_shape), 2, inds_g)
-    bins_g = torch.gather(bins.unsqueeze(1).expand(matched_shape), 2, inds_g)
+    matched_shape = [gather_indices.shape[0], gather_indices.shape[1], cdf.shape[-1]]
+    cdf_g = torch.gather(cdf.unsqueeze(1).expand(matched_shape), 2, gather_indices)
+    bins_g = torch.gather(bins.unsqueeze(1).expand(matched_shape), 2, gather_indices)
 
     denom = (cdf_g[..., 1] - cdf_g[..., 0])
     denom = torch.where(denom < 1e-5, torch.ones_like(denom), denom)
