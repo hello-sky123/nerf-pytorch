@@ -106,64 +106,30 @@ class NeRF(nn.Module):
             self.output_linear = nn.Linear(W, output_ch)
 
     def forward(self, x):
+        # 沿着最后一个维度切分成两块，两块大小由列表指定
         input_pts, input_views = torch.split(x, [self.input_ch, self.input_ch_views], dim=-1)
         h = input_pts
         for i, l in enumerate(self.pts_linears):
-            h = self.pts_linears[i](h)
-            h = F.relu(h)
-            if i in self.skips:
+            h = self.pts_linears[i](h)  # 通过线性层
+            h = F.relu(h)               # 通过 ReLU 激活函数
+            if i in self.skips:         # 跳跃连接层
                 h = torch.cat([input_pts, h], -1)
 
         if self.use_view_dirs:
-            alpha = self.alpha_linear(h)
-            feature = self.feature_linear(h)
-            h = torch.cat([feature, input_views], -1)
+            alpha = self.alpha_linear(h)          # 输出体密度
+            feature = self.feature_linear(h)      # 提取特征向量
+            h = torch.cat([feature, input_views], -1)  # 注入视角信息
 
             for i, l in enumerate(self.views_linears):
                 h = self.views_linears[i](h)
                 h = F.relu(h)
 
-            rgb = self.rgb_linear(h)
+            rgb = self.rgb_linear(h)  # 输出颜色
             outputs = torch.cat([rgb, alpha], -1)
         else:
             outputs = self.output_linear(h)
 
         return outputs
-
-    def load_weights_from_keras(self, weights):
-        assert self.use_view_dirs, "Not implemented if use_view_dirs=False"
-
-        # Load pts_linears
-        for i in range(self.D):
-            idx_pts_linears = 2 * i
-            self.pts_linears[i].weight.data = torch.from_numpy(
-                np.transpose(weights[idx_pts_linears]))
-            self.pts_linears[i].bias.data = torch.from_numpy(
-                np.transpose(weights[idx_pts_linears + 1]))
-
-        # Load feature_linear
-        idx_feature_linear = 2 * self.D
-        self.feature_linear.weight.data = torch.from_numpy(
-            np.transpose(weights[idx_feature_linear]))
-        self.feature_linear.bias.data = torch.from_numpy(
-            np.transpose(weights[idx_feature_linear + 1]))
-
-        # Load views_linears
-        idx_views_linears = 2 * self.D + 2
-        self.views_linears[0].weight.data = torch.from_numpy(
-            np.transpose(weights[idx_views_linears]))
-        self.views_linears[0].bias.data = torch.from_numpy(
-            np.transpose(weights[idx_views_linears + 1]))
-
-        # Load rgb_linear
-        idx_rbg_linear = 2 * self.D + 4
-        self.rgb_linear.weight.data = torch.from_numpy(np.transpose(weights[idx_rbg_linear]))
-        self.rgb_linear.bias.data = torch.from_numpy(np.transpose(weights[idx_rbg_linear + 1]))
-
-        # Load alpha_linear
-        idx_alpha_linear = 2 * self.D + 6
-        self.alpha_linear.weight.data = torch.from_numpy(np.transpose(weights[idx_alpha_linear]))
-        self.alpha_linear.bias.data = torch.from_numpy(np.transpose(weights[idx_alpha_linear + 1]))
 
 
 # 获取光线，模拟真实相机的光学原理，从相机的中心出发，穿过照片上的每一个像素，向三维世界发射几十万条虚拟射线

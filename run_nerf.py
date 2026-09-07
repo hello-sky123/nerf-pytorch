@@ -17,7 +17,13 @@ from run_nerf_helpers import (NeRF, get_embedder, get_rays, get_rays_np, img2mse
                               ndc_rays, sample_pdf, to8b)
 
 
-device = torch.accelerator.current_accelerator()
+# torch.accelerator arrived in torch 2.6; fall back on older versions. Even where
+# it exists, current_accelerator() returns None when there is no accelerator,
+# so the CPU fallback is needed either way.
+if hasattr(torch, 'accelerator'):
+    device = torch.accelerator.current_accelerator() or torch.device('cpu')
+else:
+    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 np.random.seed(0)
 DEBUG = False
 
@@ -190,6 +196,7 @@ def create_nerf(args):
     model = NeRF(D=args.net_depth, W=args.net_width,
                  input_ch=input_ch, skips=skips,
                  input_ch_views=input_ch_views, use_view_dirs=args.use_view_dirs).to(device)
+    # 把神经网络内部所有需要被训练的参数（也就是权重和偏置）全部提取出来，打包成一个列表，准备交给“优化器”去更新
     grad_vars = list(model.parameters())
 
     model_fine = None
