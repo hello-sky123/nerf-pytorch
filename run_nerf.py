@@ -17,9 +17,6 @@ from run_nerf_helpers import (NeRF, get_embedder, get_rays, get_rays_np, img2mse
                               ndc_rays, sample_pdf, to8b)
 
 
-# torch.accelerator arrived in torch 2.6; fall back on older versions. Even where
-# it exists, current_accelerator() returns None when there is no accelerator,
-# so the CPU fallback is needed either way.
 if hasattr(torch, 'accelerator'):
     device = torch.accelerator.current_accelerator() or torch.device('cpu')
 else:
