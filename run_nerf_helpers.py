@@ -118,19 +118,19 @@ class NeRF(nn.Module):
             h = self.pts_linears[i](h)  # 通过线性层
             h = F.relu(h)               # 通过 ReLU 激活函数
             if i in self.skips:         # 跳跃连接层
-                h = torch.cat([input_pts, h], -1)
+                h = torch.cat([input_pts, h], dim=-1)
 
         if self.use_view_dirs:
             alpha = self.alpha_linear(h)          # 输出体密度
             feature = self.feature_linear(h)      # 提取特征向量
-            h = torch.cat([feature, input_views], -1)  # 注入视角信息
+            h = torch.cat([feature, input_views], dim=-1)  # 注入视角信息
 
             for i, l in enumerate(self.views_linears):
                 h = self.views_linears[i](h)
                 h = F.relu(h)
 
             rgb = self.rgb_linear(h)  # 输出颜色
-            outputs = torch.cat([rgb, alpha], -1)
+            outputs = torch.cat([rgb, alpha], dim=-1)
         else:
             outputs = self.output_linear(h)
 
