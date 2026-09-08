@@ -92,16 +92,16 @@ class NeRF(nn.Module):
         self.skips = [4] if skips is None else skips
         self.use_view_dirs = use_view_dirs
 
-        # nn.Linear 全连接层，nn.ModuleList 神经网络层列表
+        # nn.ModuleList 专门装网络层的容器，nn.Linear 全连接层（线性变换层）
         # 只用普通的 MLP，网络在经过多层传播后，很容易“遗忘”最初输入的精确 3D 坐标位置信息（高频细节丢失）
         # 为了解决这个问题，NeRF 论文提出：在网络中间层，把原始的位置编码特征重新拼接进来
         self.pts_linears = nn.ModuleList(
             [nn.Linear(input_ch, W)]
-            + [nn.Linear(W, W) if i not in self.skips else nn.Linear(W + input_ch, W)
+            + [nn.Linear(W, W) if i not in self.skips else nn.Linear(input_ch + W, W)
                for i in range(D - 1)])
 
         # 与视角相关的颜色预测
-        self.views_linears = nn.ModuleList([nn.Linear(input_ch_views + W, W // 2)])
+        self.views_linears = nn.ModuleList([nn.Linear(W + input_ch_views, W // 2)])
 
         if use_view_dirs:
             self.feature_linear = nn.Linear(W, W)              # 提取最终的空间几何特征
