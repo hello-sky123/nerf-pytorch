@@ -84,7 +84,7 @@ class NeRF(nn.Module):
                  use_view_dirs=False):
         """
         """
-        super(NeRF, self).__init__()  # 调用父类的初始化方法
+        super().__init__()  # 调用父类的初始化方法
         self.D = D
         self.W = W
         self.input_ch = input_ch
