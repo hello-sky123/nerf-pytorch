@@ -226,7 +226,7 @@ def create_nerf(args):
 
     print('Found ckpts', ckpt_paths)
     if len(ckpt_paths) > 0 and not args.no_reload:
-        ckpt_path = ckpt_paths[-1]
+        ckpt_path = ckpt_paths[-1]  # 最新的权重
         print('Reloading from', ckpt_path)
         ckpt = torch.load(ckpt_path, weights_only=True)  # 加载 torch.save 保存的字典（序列化的模型相关参数）
 
@@ -672,7 +672,7 @@ def train():
         'near': near,
         'far': far,
     }
-    render_kwargs_train.update(bds_dict)
+    render_kwargs_train.update(bds_dict)  # 原地修改字典，覆盖/新增键值对
     render_kwargs_test.update(bds_dict)
 
     # Move testing data to GPU
@@ -709,16 +709,18 @@ def train():
     use_batching = not args.no_batching
     i_batch = 0
     rays_rgb = torch.empty(0, 3, 3)
+    # 控制一批光线从哪里来，True 表示从所有训练图像中随机采样，False 表示从一张训练图像中随机采样
     if use_batching:
         # For random ray batching
         print('get rays')
         rays = np.stack([get_rays_np(H, W, K, p)
-                        for p in poses[:, :3, :4]], 0)  # [N, ro+rd, H, W, 3]
+                        for p in poses[:, :3, :4]], 0)  # [N, ro + rd, H, W, 3]
         print('done, concats')
-        rays_rgb = np.concatenate([rays, images[:, None]], 1)  # [N, ro+rd+rgb, H, W, 3]
-        rays_rgb = np.transpose(rays_rgb, [0, 2, 3, 1, 4])  # [N, H, W, ro+rd+rgb, 3]
+        # images[:, None] 在 images 的第二个维度上增加一个维度，变成 [N, 1, H, W, 3]，方便与 rays 拼接
+        rays_rgb = np.concatenate([rays, images[:, None]], 1)  # [N, ro + rd + rgb, H, W, 3]
+        rays_rgb = np.transpose(rays_rgb, [0, 2, 3, 1, 4])  # [N, H, W, ro + rd + rgb, 3]
         rays_rgb = np.stack([rays_rgb[i] for i in i_train], 0)  # train images only
-        rays_rgb = np.reshape(rays_rgb, [-1, 3, 3])  # [(N-1)*H*W, ro+rd+rgb, 3]
+        rays_rgb = np.reshape(rays_rgb, [-1, 3, 3])  # [len(i_train) * H * W, ro + rd + rgb, 3]
         print('shuffle rays')
         np.random.shuffle(rays_rgb)
 
