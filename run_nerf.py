@@ -643,7 +643,7 @@ def train():
             [focal, 0, 0.5 * W],
             [0, focal, 0.5 * H],
             [0, 0, 1]
-        ])
+        ], dtype=np.float32)
 
     if args.render_test:
         render_poses = np.array(poses[i_test])
