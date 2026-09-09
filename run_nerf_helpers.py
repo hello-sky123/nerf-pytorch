@@ -164,10 +164,10 @@ def get_rays_np(H, W, K, c2w):
     # big rays_rgb array in train(). Cast K down to keep the float32 result
     # numpy < 2.0 produced.
     K = np.asarray(K, dtype=np.float32)
-    dirs = np.stack([(i - K[0][2]) / K[0][0], -(j - K[1][2]) / K[1][1], -np.ones_like(i)], -1)
+    dirs = np.stack([(i - K[0][2]) / K[0][0], -(j - K[1][2]) / K[1][1], -np.ones_like(i)], axis=-1)
     # Rotate ray directions from camera frame to the world frame
     # dot product, equals to: [c2w.dot(dir) for dir in dirs]
-    rays_d = np.sum(dirs[:, :, None, :] * c2w[:3, :3], -1)
+    rays_d = np.sum(dirs[:, :, None, :] * c2w[:3, :3], axis=-1)
     # Translate camera frame's origin to the world frame. It is the origin of all rays.
     rays_o = np.broadcast_to(c2w[:3, -1], np.shape(rays_d))
     return rays_o, rays_d
