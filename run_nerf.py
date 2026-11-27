@@ -81,7 +81,7 @@ def render(H, W, K, chunk=1024 * 32, rays=None, c2w=None, ndc=True,
     Args:
       H: int. Height of image in pixels.
       W: int. Width of image in pixels.
-      focal: float. Focal length of pinhole camera.
+      K: array of shape [3, 3]. Intrinsics of pinhole camera.
       chunk: int. Maximum number of rays to process simultaneously. Used to
         control maximum memory usage. Does not affect final results.
       rays: array of shape [2, batch_size, 3]. Ray origin and direction for
@@ -100,7 +100,7 @@ def render(H, W, K, chunk=1024 * 32, rays=None, c2w=None, ndc=True,
       extras: dict with everything returned by render_rays().
     """
     if c2w is not None:
-        # special case to render full image
+        # 测试/推理阶段：渲染一整张完整的图
         rays_o, rays_d = get_rays(H, W, K, c2w)
     else:
         # use provided ray batch
@@ -124,6 +124,7 @@ def render(H, W, K, chunk=1024 * 32, rays=None, c2w=None, ndc=True,
     rays_o = torch.reshape(rays_o, [-1, 3]).float()
     rays_d = torch.reshape(rays_d, [-1, 3]).float()
 
+    # rays_d[..., :1] 切片，... 表示匹配剩余所有维度，最后的切片 :1 --> 保留这个维度，整数索引 0 --> 删除这个维度
     near, far = near * torch.ones_like(rays_d[..., :1]), far * torch.ones_like(rays_d[..., :1])
     rays = torch.cat([rays_o, rays_d, near, far], -1)
     if use_view_dirs:
