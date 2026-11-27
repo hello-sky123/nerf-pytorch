@@ -113,7 +113,7 @@ def render(H, W, K, chunk=1024 * 32, rays=None, c2w=None, ndc=True,
             # special case to visualize effect of view_dirs
             rays_o, rays_d = get_rays(H, W, K, c2w_static_cam)
         view_dirs = view_dirs / torch.norm(view_dirs, dim=-1, keepdim=True)
-        view_dirs = torch.reshape(view_dirs, [-1, 3]).float()
+        view_dirs = torch.reshape(view_dirs, [-1, 3])
 
     sh = rays_d.shape  # [..., 3]
     if ndc:
@@ -121,8 +121,8 @@ def render(H, W, K, chunk=1024 * 32, rays=None, c2w=None, ndc=True,
         rays_o, rays_d = ndc_rays(H, W, K[0][0], 1., rays_o, rays_d)
 
     # Create ray batch
-    rays_o = torch.reshape(rays_o, [-1, 3]).float()
-    rays_d = torch.reshape(rays_d, [-1, 3]).float()
+    rays_o = torch.reshape(rays_o, [-1, 3])
+    rays_d = torch.reshape(rays_d, [-1, 3])
 
     # rays_d[..., :1] 切片，... 表示匹配剩余所有维度，最后的切片 :1 --> 保留这个维度，整数索引 0 --> 删除这个维度
     near, far = near * torch.ones_like(rays_d[..., :1]), far * torch.ones_like(rays_d[..., :1])
