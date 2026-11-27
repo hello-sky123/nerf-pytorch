@@ -23,6 +23,8 @@ def rot_phi(phi):
         [0., 0., 0., 1.]], dtype=torch.float32)
 
 
+# 矩阵是标准绕 y 轴旋转 R_y(-th)。换到 blender 世界系后，th 增大时相机从 +Y 转向 +X，
+# 从 +Z 往下看是顺时针，和地图方位角的方向相同
 def rot_theta(th):
     return torch.tensor([
         [np.cos(th), 0., -np.sin(th), 0.],
@@ -31,6 +33,10 @@ def rot_theta(th):
         [0., 0., 0., 1.]], dtype=torch.float32)
 
 
+# 世界系是 blender 约定：Z 朝上的右手系。相机系是 OpenGL 约定：x 朝右、y 朝上，沿 -z 观察。
+# 前三步在 Y 朝上的中间系 W' 中进行：trans_t 后相机坐标轴与 W' 平行，中心在 W' 的 (0, 0, radius)。
+# 最后左乘常数矩阵，把坐标从 W' 换写到 blender 世界系（x' -> -X，y' -> Z，z' -> Y）。
+# phi 取负值时相机在水平面上方
 def pose_spherical(theta, phi, radius):
     c2w = trans_t(radius)
     c2w = rot_phi(phi / 180. * np.pi) @ c2w
