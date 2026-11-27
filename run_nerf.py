@@ -785,7 +785,7 @@ def train():
             coords = torch.reshape(coords, [-1, 2])  # (H * W, 2)
             # 随机选择 n_rand 个像素点的坐标（不可重复选择）
             select_indices = np.random.choice(
-                coords.shape[0], size=[n_rand], replace=False)  # (n_rand,)
+                coords.shape[0], size=n_rand, replace=False)  # (n_rand,)
             # coords 是 float32 类型的，需要转换为 long 类型才能作为索引使用
             select_coords = coords[select_indices].long()  # (n_rand, 2)
             rays_o = rays_o[select_coords[:, 0], select_coords[:, 1]]  # (n_rand, 3)
