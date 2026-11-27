@@ -1,0 +1,141 @@
+<title>pose_spherical 坐标系</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: single column, one large 3D figure, then a small camera-frame figure beside a step table */
+:root {
+  --bg: #f6f7f9; --panel: #ffffff; --fg: #1b2230; --muted: #5d6778; --line: #d5dae3;
+  --cx: #d0342c; --cy: #1f8a4c; --cz: #2a62d6; --accent: #b4590f;
+  --sans: "Inter", system-ui, sans-serif; --mono: "JetBrains Mono", ui-monospace, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #12161d; --panel: #1a2029; --fg: #e4e8ef; --muted: #9aa4b5; --line: #323b49;
+  --cx: #ff6b62; --cy: #4fd18a; --cz: #6f9bff; --accent: #f0a050; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #12161d; --panel: #1a2029; --fg: #e4e8ef; --muted: #9aa4b5; --line: #323b49;
+  --cx: #ff6b62; --cy: #4fd18a; --cz: #6f9bff; --accent: #f0a050; color-scheme: dark }
+body { background: var(--bg); color: var(--fg); font-family: var(--sans); line-height: 1.6;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); padding-block: 24px 48px; }
+main { max-width: 980px; margin: 0 auto; display: grid; gap: 24px; }
+h1 { font-size: 1.5rem; margin: 0; text-wrap: balance; }
+h1 code { font-family: var(--mono); }
+p { margin: 0; max-width: 68ch; color: var(--muted); }
+code { font-family: var(--mono); font-size: .92em; }
+figure { margin: 0; background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 16px; overflow-x: auto; }
+figcaption { font-size: .85rem; color: var(--muted); margin-top: 8px; max-width: 72ch; }
+svg { display: block; max-width: 100%; height: auto; margin: 0 auto; font-family: var(--mono); }
+.row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr); gap: 24px; }
+@media (max-width: 720px) { .row { grid-template-columns: minmax(0, 1fr); } }
+.fg { stroke: var(--fg); fill: none; } .mu { stroke: var(--muted); fill: none; }
+.t { fill: var(--fg); font-size: 13px; } .tm { fill: var(--muted); font-size: 11.5px; }
+.sx { stroke: var(--cx); } .sy { stroke: var(--cy); } .sz { stroke: var(--cz); } .sa { stroke: var(--accent); fill: none; }
+.fx { fill: var(--cx); } .fy { fill: var(--cy); } .fz { fill: var(--cz); } .fa { fill: var(--accent); } .ff { fill: var(--fg); } .fm { fill: var(--muted); }
+.dash { stroke-dasharray: 4 4; }
+.tbl { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: .9rem; }
+th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--line); vertical-align: top; }
+th { font-size: .75rem; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); }
+td code { white-space: nowrap; }
+.k { color: var(--cx); } .g { color: var(--cy); } .b { color: var(--cz); }
+</style>
+
+<main>
+  <header style="display:grid;gap:8px">
+    <h1><code>pose_spherical(θ, φ, r)</code> 的坐标系与相机位姿</h1>
+    <p>世界系是 Blender 的 Z 朝上右手系。相机在半径 r 的球面上，光轴始终指向原点。图中示例取 θ = −60°，φ = −30°（代码默认仰角）。</p>
+  </header>
+
+  <figure>
+    <svg viewBox="0 0 480 380" role="img" aria-label="Blender 世界系中，相机位于半径 r 的球面上，仰角 30 度的圆轨道上，光轴指向原点；初始相机位于 +Y 轴">
+      <defs>
+        <marker id="af" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" class="ff"/></marker>
+        <marker id="ax" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" class="fx"/></marker>
+        <marker id="ay" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" class="fy"/></marker>
+        <marker id="az" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" class="fz"/></marker>
+        <marker id="aa" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L10,5 L0,10 z" class="fa"/></marker>
+      </defs>
+
+      <!-- equator (z=0) and orbit (elevation 30°) -->
+      <polyline class="mu dash" stroke-width="1" points="380.0,260.0 363.4,270.9 342.7,281.5 318.7,291.5 291.9,300.5 263.2,308.3 233.6,314.6 203.8,319.2 174.8,322.0 147.5,323.0 122.7,322.0 101.2,319.2 83.6,314.6 70.4,308.3 62.1,300.5 58.8,291.5 60.8,281.5 68.0,270.9 80.0,260.0 96.6,249.1 117.3,238.5 141.3,228.5 168.1,219.5 196.8,211.7 226.4,205.4 256.2,200.8 285.2,198.0 312.5,197.0 337.3,198.0 358.8,200.8 376.4,205.4 389.6,211.7 397.9,219.5 401.2,228.5 399.2,238.5 392.0,249.1 380.0,260.0"/>
+      <text class="tm" x="64" y="338">z = 0 平面上的半径 r 圆</text>
+      <polyline class="sa" stroke-width="1.6" points="359.9,185.0 345.5,194.5 327.6,203.7 306.8,212.3 283.6,220.1 258.8,226.8 233.1,232.3 207.3,236.3 182.2,238.8 158.6,239.6 137.1,238.8 118.5,236.3 103.2,232.3 91.8,226.8 84.6,220.1 81.8,212.3 83.5,203.7 89.7,194.5 100.1,185.0 114.5,175.5 132.4,166.3 153.2,157.7 176.4,149.9 201.2,143.2 226.9,137.7 252.7,133.7 277.8,131.2 301.4,130.4 322.9,131.2 341.5,133.7 356.8,137.7 368.2,143.2 375.4,149.9 378.2,157.7 376.5,166.3 370.3,175.5 359.9,185.0"/>
+      <text class="tm" x="40" y="160" style="fill:var(--accent)">render_poses 轨道</text>
+      <text class="tm" x="40" y="174" style="fill:var(--accent)">φ = −30°, r = 4</text>
+
+      <!-- world axes -->
+      <line class="fg" stroke-width="1.4" x1="230" y1="260" x2="122.8" y2="341.9" marker-end="url(#af)"/>
+      <line class="fg" stroke-width="1.4" x1="230" y1="260" x2="438" y2="260" marker-end="url(#af)"/>
+      <line class="fg" stroke-width="1.4" x1="230" y1="260" x2="230" y2="40" marker-end="url(#af)"/>
+      <text class="t" x="98" y="356">X <tspan class="tm">(= −x′)</tspan></text>
+      <text class="t" x="442" y="264">Y</text>
+      <text class="tm" x="430" y="280">(= z′)</text>
+      <text class="t" x="238" y="46">Z <tspan class="tm">(= y′, 上)</tspan></text>
+      <circle cx="230" cy="260" r="3" class="ff"/>
+      <text class="tm" x="206" y="276">原点</text>
+
+      <!-- theta arc on ground, elevation arc -->
+      <polyline class="sa" stroke-width="1.2" marker-end="url(#aa)" points="290.0,260.0 292.6,257.8 294.8,255.6 296.5,253.5 297.7,251.4 298.3,249.4 298.5,247.4 298.1,245.5 297.2,243.8 295.8,242.2 293.8,240.7 291.4,239.4 288.6,238.2"/>
+      <text class="t" x="302" y="252" style="fill:var(--accent)">θ</text>
+      <polyline class="sa" stroke-width="1.2" marker-end="url(#aa)" points="288.6,238.2 288.4,233.0 287.7,228.1 286.6,223.4 285.0,219.0 283.1,214.9 280.7,211.1"/>
+      <text class="t" x="300" y="214" style="fill:var(--accent)">−φ</text>
+
+      <!-- radius, ground projection -->
+      <line class="mu dash" x1="230" y1="260" x2="356.9" y2="212.8"/>
+      <line class="mu dash" x1="356.9" y1="137.8" x2="356.9" y2="212.8"/>
+      <line class="fg" stroke-width="1" x1="230" y1="260" x2="356.9" y2="137.8"/>
+      <text class="t" x="276" y="182">r</text>
+
+      <!-- initial camera at +Y axis (after trans_t, before rotations) -->
+      <circle cx="380" cy="260" r="4" class="fm"/>
+      <line class="sx" stroke-width="1.6" x1="380" y1="260" x2="404.8" y2="241.1" marker-end="url(#ax)"/>
+      <line class="sy" stroke-width="1.6" x1="380" y1="260" x2="380" y2="215" marker-end="url(#ay)"/>
+      <text class="tm" x="352" y="300">初始相机 (0, r, 0)</text>
+      <text class="tm" x="352" y="314">θ = φ = 0，看向 −Y</text>
+
+      <!-- camera at θ=-60°, φ=-30° -->
+      <line class="sa dash" stroke-width="1" x1="356.9" y1="137.8" x2="236" y2="254" />
+      <circle cx="356.9" cy="137.8" r="5" class="fa"/>
+      <line class="sx" stroke-width="2" x1="356.9" y1="137.8" x2="330.3" y2="128.3" marker-end="url(#ax)"/>
+      <line class="sy" stroke-width="2" x1="356.9" y1="137.8" x2="334.9" y2="107.0" marker-end="url(#ay)"/>
+      <line class="sz" stroke-width="2" x1="356.9" y1="137.8" x2="394.9" y2="101.1" marker-end="url(#az)"/>
+      <text class="t" x="316" y="124" style="fill:var(--cx)">x</text>
+      <text class="t" x="322" y="100" style="fill:var(--cy)">y</text>
+      <text class="t" x="400" y="100" style="fill:var(--cz)">z</text>
+      <text class="tm" x="372" y="150">相机中心</text>
+      <text class="tm" x="372" y="164">光轴 −z 指向原点</text>
+    </svg>
+    <figcaption>黑色轴是 Blender 世界系 W（Z 朝上），括号里是中间系 W′ 中对应的轴。彩色短箭头是相机自身的 <span class="k">x（右）</span>、<span class="g">y（上）</span>、<span class="b">z（背离场景）</span> 轴，也就是 c2w 旋转部分的三列。初始相机站在 +Y 轴上，θ 绕 Z 轴转动它（图中 θ = −60°，转向 −X），−φ 把它抬高到 30° 仰角。</figcaption>
+  </figure>
+
+  <div class="row">
+    <figure>
+      <svg viewBox="0 0 260 220" role="img" aria-label="相机坐标系：x 向右，y 向上，z 朝后，相机沿 −z 方向观察">
+        <rect x="40" y="40" width="120" height="90" class="mu" stroke-width="1"/>
+        <text class="tm" x="46" y="56">成像平面</text>
+        <circle cx="100" cy="150" r="4" class="ff"/>
+        <line class="sx" stroke-width="2" x1="100" y1="150" x2="170" y2="150" marker-end="url(#ax)"/>
+        <line class="sy" stroke-width="2" x1="100" y1="150" x2="100" y2="80" marker-end="url(#ay)"/>
+        <line class="sz" stroke-width="2" x1="100" y1="150" x2="60" y2="195" marker-end="url(#az)"/>
+        <line class="sa dash" stroke-width="1.4" x1="100" y1="150" x2="150" y2="94" marker-end="url(#aa)"/>
+        <text class="t" x="176" y="154" style="fill:var(--cx)">x 右</text>
+        <text class="t" x="106" y="78" style="fill:var(--cy)">y 上</text>
+        <text class="t" x="34" y="210" style="fill:var(--cz)">z 朝后</text>
+        <text class="t" x="156" y="92" style="fill:var(--accent)">−z 视线</text>
+      </svg>
+      <figcaption>相机系使用 OpenGL 约定。<code>get_rays</code> 中的 <code>dirs = [(i−cx)/f, −(j−cy)/f, −1]</code> 正是沿 −z 发射光线。</figcaption>
+    </figure>
+
+    <div class="tbl">
+      <table>
+        <thead><tr><th>步骤</th><th>矩阵</th><th>相机变成什么样</th></tr></thead>
+        <tbody>
+          <tr><td>1</td><td><code>trans_t(r)</code></td><td>在 W′ 中平移到 (0, 0, r)，相机轴与 W′ 重合，看向原点</td></tr>
+          <tr><td>2</td><td><code>rot_phi(φ)</code></td><td>绕水平轴 x′ 转；φ &lt; 0 时相机抬高，仰角 = −φ</td></tr>
+          <tr><td>3</td><td><code>rot_theta(θ)</code></td><td>绕竖直轴 y′（世界 Z）转，相机绕物体转圈</td></tr>
+          <tr><td>4</td><td><code>M</code></td><td>把 W′（Y 朝上）换到 Blender 世界 W（Z 朝上）：x′→−X，y′→Z，z′→Y</td></tr>
+          <tr><td>结果</td><td><code>c2w</code></td><td>中心 = (r cosφ sinθ, r cosφ cosθ, −r sinφ)；相机 x 轴 = (−cosθ, sinθ, 0)，始终水平</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</main>
